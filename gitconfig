@@ -1,0 +1,45 @@
+[user]
+	name = Gorman Stock
+	email = gormanstock@gmail.com
+[core]
+	editor = nano
+[pull]
+	rebase = false
+[merge]
+	conflictstyle = diff3
+[alias]
+	fileschanged = diff HEAD^ HEAD --name-only
+	fc = diff --name-only HEAD~1 HEAD
+	to = commit -a --amend --no-edit
+	tackon = commit -a --amend --no-edit
+	st = status
+	dt = difftool HEAD^ HEAD --no-prompt
+	temp = checkout temp
+	sd = branch --delete
+	safedelete = branch --delete
+	sami = clean -dn
+	druggedfox = clean -df
+	morning = commit -a
+	remessage = commit --amend
+	rip = reset HEAD~1 $1
+	ripout = reset HEAD~1 $1 && git checkout -- .
+	ro = reset HEAD~1
+	nored = checkout -- .
+	nogreen = reset HEAD .
+	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+	cane = commit --amend --no-edit
+	cod = checkout `branch --contains HEAD --no-merged | head -1`
+	fcs = diff --name-only
+        us = submodule update --recursive --remote
+        updatesubmodules = submodule update --recursive --remote
+[credential]
+	helper = /usr/bin/gp credential-helper
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[push]
+	default = simple
+[help]
+	autocorrect = 20
