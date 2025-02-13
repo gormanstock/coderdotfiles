@@ -29,6 +29,7 @@ alias h="history -10" # last 10 history commands
 alias hc="history -c" # clear history
 alias hg="history | grep " # +command
 alias ag="alias | grep "
+alias dotfiles="coder dotfiles https://github.com/gormanstock/coderdotfiles"
 
 # some more ls aliases
 alias ls='ls --color=auto'
