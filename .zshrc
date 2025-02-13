@@ -50,11 +50,3 @@ zstyle ':completion:*' menu select=2
 export HISTSIZE=10000
 export HISEFILESIZE=10000
 export HISTFILE=/workspace/.zhistory
-
-export PATH=/ide/bin:$PATH
-
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change. (From gitpod)
-export PATH="$PATH:$HOME/.rvm/bin"
-
-eval $(/home/linuxbrew/.linuxbrew/bin/brew shellenv)
-export JAVA_HOME=/home/linuxbrew/.linuxbrew
