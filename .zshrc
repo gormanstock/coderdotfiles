@@ -30,6 +30,22 @@ alias hc="history -c" # clear history
 alias hg="history | grep " # +command
 alias ag="alias | grep "
 
+# some more ls aliases
+alias ls='ls --color=auto'
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias l.='ls -d .* --color=auto'
+
+alias cd..='cd ..'
+alias ..='cd ..'
+alias ...='cd ../../../'
+alias ....='cd ../../../../'
+alias .....='cd ../../../../'
+alias .4='cd ../../../../'
+alias .5='cd ../../../../..'
+alias back='cd -'
+
 function hr {
 	print ${(l:COLUMNS::=:)}
 }
