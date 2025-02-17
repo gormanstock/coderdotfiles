@@ -2,11 +2,13 @@
 	name = Gorman Stock
 	email = gormanstock@gmail.com
 [core]
-	editor = vi
+	editor = code
 [pull]
 	rebase = false
 [merge]
 	conflictstyle = diff3
+[rebase]
+    	instructionFormat = %s [%an]
 [alias]
 	fixup = "!git add . && git commit --fixup=${1:-$(git rev-parse HEAD)} && GIT_EDITOR=true git rebase --interactive --autosquash ${1:-$(git rev-parse HEAD~2)}~1"
 	fileschanged = diff HEAD^ HEAD --name-only
