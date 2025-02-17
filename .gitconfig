@@ -2,7 +2,7 @@
 	name = Gorman Stock
 	email = gormanstock@gmail.com
 [core]
-	editor = nano
+	editor = vi
 [pull]
 	rebase = false
 [merge]
