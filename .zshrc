@@ -74,7 +74,7 @@ get_short_branch() {
 if [[ "$(git branch --show-current 2>/dev/null)" -gt 15 ]]; then
   echo "${"$(git branch --show-current 2>/dev/null)":0:6}"
 else
-  echo "$(git branch --show-current 2>/dev/null)"
+  echo "${"$(git branch --show-current 2>/dev/null)":0:6}"
 fi
 }
 
