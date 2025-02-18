@@ -68,7 +68,8 @@ autoload -Uz vcs_info
 precmd() { vcs_info }
 
 # format vcs_info variable
-zstyle ':vcs_info:git:*' formats ':%F{green}%b%f'
+#zstyle ':vcs_info:git:*' formats ':%F{green}%b%f'
+zstyle ':vcs_info:git*' formats "%s  %r/%S %b (%a) %m%u%c "
 
 # set up the prompt
 setopt PROMPT_SUBST
