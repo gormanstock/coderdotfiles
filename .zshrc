@@ -83,7 +83,7 @@ fi
 # set up the prompt
 setopt PROMPT_SUBST
 #PROMPT='%F{blue}%1~%f${vcs_info_msg_0_} $ '
-PROMPT='%F{magenta}($(get_short_branch))%F{green}»%F{cyan}%1~%f%F{green}» %f'
+PROMPT='%F{magenta}$(get_short_branch)%F{green}»%F{cyan}%1~%f%F{green}» %f'
 #----------------------------------------------------------
 
 export HISTSIZE=10000
