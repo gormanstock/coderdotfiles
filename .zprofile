@@ -7,4 +7,4 @@ zstyle ':vcs_info:git:*' formats '%b'
 
 # Set up the prompt
 setopt PROMPT_SUBST
-PROMPT='%1~ %F{green}${vcs_info_msg_0_}%f $ '
+PROMPT='${vcs_info_msg_0_}%f $ %1~ %F{green}'
