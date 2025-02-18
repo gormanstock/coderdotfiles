@@ -71,10 +71,12 @@ precmd() { vcs_info }
 zstyle ':vcs_info:git:*' formats ':%F{green}%b%f'
 
 get_short_branch() {
-if [[ "${(git branch --show-current 2>/dev/null)}" -gt 15 ]]; then
-  echo "${"$(git branch --show-current 2>/dev/null)":0:6}"
+command_output=$(git branch --show-current 2>/dev/null)
+output_length=${#command_output}
+if [[ "$output_length" -gt 15 ]]; then
+  echo "${command_output:0:6}"
 else
-  echo "${"$(git branch --show-current 2>/dev/null)":0:6}"
+  echo "$command_output"
 fi
 }
 
