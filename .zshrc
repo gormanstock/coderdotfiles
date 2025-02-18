@@ -68,12 +68,12 @@ autoload -Uz vcs_info
 precmd() { vcs_info }
 
 # format vcs_info variable
-#zstyle ':vcs_info:git:*' formats ':%F{green}%b%f'
-zstyle ':vcs_info:git*' formats "%s  %r/%S %b (%a) %m%u%c "
+zstyle ':vcs_info:git:*' formats ':%F{green}%b%f'
 
 # set up the prompt
 setopt PROMPT_SUBST
-PROMPT='%F{blue}%1~%f${vcs_info_msg_0_} $ '
+#PROMPT='%F{blue}%1~%f${vcs_info_msg_0_} $ '
+PROMPT='%F{blue}%1~%f$ $ '
 #----------------------------------------------------------
 
 export HISTSIZE=10000
