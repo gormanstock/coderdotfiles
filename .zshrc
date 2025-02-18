@@ -72,8 +72,8 @@ zstyle ':vcs_info:git:*' formats ':%F{green}%b%f'
 
 get_short_branch() {
 BRANCH="$(git branch --show-current 2>/dev/null)"
-if [[ ${BRANCH} -gt 15 ]]; then
-  echo "${${BRANCH}:0:6}"
+if [[ $"{BRANCH}" -gt 15 ]]; then
+  echo "${$"{BRANCH}":0:6}"
 else
   echo "${BRANCH}"
 fi
