@@ -46,6 +46,7 @@ alias .....='cd ../../../../'
 alias .4='cd ../../../../'
 alias .5='cd ../../../../..'
 alias back='cd -'
+hash -d —=/workspaces
 
 function hr {
 	print ${(l:COLUMNS::=:)}
@@ -101,7 +102,6 @@ zstyle ':vcs_info:git*' stagedstr '+'
 # but can be slow on large repos
 zstyle ':vcs_info:*:*' check-for-changes true
 
-—=/workspaces
 setopt autonamedirs
 
 # Set the right prompt to the vcs_info message
