@@ -102,7 +102,7 @@ zstyle ':vcs_info:git*' stagedstr '+'
 zstyle ':vcs_info:*:*' check-for-changes true
 
 # Set the right prompt to the vcs_info message
-RPROMPT='%F{red}⎇%F{yellow}$(get_short_branch)%f'
+RPROMPT='%F{blue}⎇%F{green}$(get_short_branch)%f'
 
 PROMPT='%F{magenta}%1~%f%F{cyan}» %f'
 #ZSH_THEME_GIT_PROMPT_PREFIX="%{$fg_bold[blue]%}(%{$fg_bold[red]%}"
