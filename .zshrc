@@ -46,7 +46,6 @@ alias .....='cd ../../../../'
 alias .4='cd ../../../../'
 alias .5='cd ../../../../..'
 alias back='cd -'
-hash -d ›=/workspaces
 
 function hr {
 	print ${(l:COLUMNS::=:)}
