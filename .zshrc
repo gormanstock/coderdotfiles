@@ -101,6 +101,9 @@ zstyle ':vcs_info:git*' stagedstr '+'
 # but can be slow on large repos
 zstyle ':vcs_info:*:*' check-for-changes true
 
+—=/workspaces
+setopt autonamedirs
+
 # Set the right prompt to the vcs_info message
 RPROMPT='%F{blue}⎇%F{green}$(get_short_branch)%f'
 
