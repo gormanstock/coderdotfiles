@@ -104,7 +104,7 @@ zstyle ':vcs_info:*:*' check-for-changes true
 setopt autonamedirs
 
 # Set the right prompt to the vcs_info message
-ZSH_THEME=robbyrussell
+ZSH_THEME=agnoster
 #RPROMPT='%F{yellow}⎇ %F{magenta}$(get_short_branch)%f'
 
 #PROMPT='%F{yellow}➜ %F{magenta}%~%f%F{cyan}» %f'
