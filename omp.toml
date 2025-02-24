@@ -35,7 +35,7 @@ final_space = true
       home_icon = '~'
       style = 'agnoster_short'
     [mapped_locations]
-      '/workspaces/lyra' = 'lyra'
+      '/workspaces' = 'w'
   
     [[blocks.segments]]
     template = ''
