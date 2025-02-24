@@ -34,8 +34,6 @@ final_space = true
       folder_icon = '....'
       home_icon = '~'
       style = 'agnoster_short'
-    [mapped_locations]
-      '/workspaces' = 'w'
   
     [[blocks.segments]]
     template = ''
@@ -65,3 +63,11 @@ final_space = true
       revert_icon = ' '
       tag_icon = ' '
       branch_max_length = 6
+
+[path]
+
+mapped_locations = [
+
+    { path = "/workspaces", icon = "" }  
+
+]
