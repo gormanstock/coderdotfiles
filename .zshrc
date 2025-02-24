@@ -58,7 +58,7 @@ if [ ! -d "$OMP_HOME" ]; then
   curl --silent --output /dev/null https://ohmyposh.dev/install.sh
 fi
 
-eval "$(/home/coder/.local/bin/oh-my-posh init zsh) --config 'https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/refs/heads/main/themes/catppuccin_latte.omp.json'"
+eval "$(/home/coder/.local/bin/oh-my-posh init zsh --config /home/coder/.cache/oh-my-posh/themes/grandpa-style.omp.json)"
 #----------------------------------------------------------
 # COMPLETION SETTINGS
 # add custom completion scripts
