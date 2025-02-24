@@ -12,7 +12,7 @@ final_space = true
   yellow = '#F3AE35'
 
 [secondary_prompt]
-  template = '<p:yellow,transparent></><,p:yellow> > </><p:yellow,transparent></> '
+  template = '<p:green,transparent></><,p:green> > </><p:green,transparent></> '
   foreground = 'p:black'
   background = 'transparent'
 
