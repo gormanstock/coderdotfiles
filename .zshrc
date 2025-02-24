@@ -55,10 +55,10 @@ function hr {
 # oh-my-posh settings
 OMP_HOME="/home/coder/.local/bin/oh-my-posh"
 if [ ! -d "$OMP_HOME" ]; then
-  curl -s https://ohmyposh.dev/install.sh | bash -s
+  curl -s https://ohmyposh.dev/install.sh
 fi
 
-eval "$(/home/coder/.local/bin/oh-my-posh init zsh) --config https://raw.githubusercontent.com/gormanstock/coderdotfiles/blob/main/omp.toml"
+eval "$(/home/coder/.local/bin/oh-my-posh init zsh) --config https://raw.githubusercontent.com/gormanstock/coderdotfiles/refs/heads/main/omp.toml"
 #----------------------------------------------------------
 # COMPLETION SETTINGS
 # add custom completion scripts
