@@ -87,6 +87,57 @@ final_space = true
     [blocks.segments.properties]
       always_enabled = true
 
+[[blocks]]
+  type = 'rprompt'
+
+  [[blocks.segments]]
+    template = ' '
+    foreground = 'p:green'
+    background = 'transparent'
+    type = 'node'
+    style = 'plain'
+
+    [blocks.segments.properties]
+      display_mode = 'files'
+      fetch_package_manager = false
+      home_enabled = false
+
+  [[blocks.segments]]
+    template = ' '
+    foreground = 'p:blue'
+    background = 'transparent'
+    type = 'go'
+    style = 'plain'
+
+    [blocks.segments.properties]
+      fetch_version = false
+
+  [[blocks.segments]]
+    template = ' '
+    foreground = 'p:yellow'
+    background = 'transparent'
+    type = 'python'
+    style = 'plain'
+
+    [blocks.segments.properties]
+      display_mode = 'files'
+      fetch_version = false
+      fetch_virtual_env = false
+
+  [[blocks.segments]]
+    template = 'in <p:blue><b>{{ .Name }}</b></> '
+    foreground = 'p:white'
+    background = 'transparent'
+    type = 'shell'
+    style = 'plain'
+
+  [[blocks.segments]]
+    template = 'at <p:blue><b>{{ .CurrentDate | date "15:04:05" }}</b></>'
+    foreground = 'p:white'
+    background = 'transparent'
+    type = 'time'
+    style = 'plain'
+
 [[tooltips]]
   leading_diamond = ''
   trailing_diamond = ''
