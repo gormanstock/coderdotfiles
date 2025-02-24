@@ -12,12 +12,12 @@ final_space = true
   yellow = '#F3AE35'
 
 [secondary_prompt]
-  template = '<p:yellow,transparent></> '
+  template = '<p:yellow,transparent></><,p:yellow> > </><p:yellow,transparent></> '
   foreground = 'p:black'
   background = 'transparent'
 
 [transient_prompt]
-  template = '<p:yellow,transparent></><,p:yellow> {{ .Folder }} </><p:yellow,transparent></> '
+  template = '<p:yellow,transparent></>'
   foreground = 'p:black'
   background = 'transparent'
 
