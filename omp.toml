@@ -34,6 +34,8 @@ final_space = true
       folder_icon = '....'
       home_icon = '~'
       style = 'agnoster_short'
+    [mapped_locations]
+      "/workspaces/lyra = "lyra"
   
     [[blocks.segments]]
     template = ''
@@ -63,6 +65,3 @@ final_space = true
       revert_icon = ' '
       tag_icon = ' '
       branch_max_length = 6
-
-[mapped_locations]
-  "/workspaces/lyra = "lyra"
