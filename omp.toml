@@ -34,8 +34,8 @@ final_space = true
       folder_icon = '....'
       home_icon = '~'
       style = 'agnoster_short'
-      [mapped_locations]
-        "/workspaces" = ""
+    [blocks.segments.properties.mapped_locations]
+      "/workspaces/lyra" = "AYYY"
   
     [[blocks.segments]]
     template = ''
