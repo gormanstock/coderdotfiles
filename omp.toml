@@ -14,11 +14,6 @@ final_space = true
   auto = false
   notice = false
 
-[transient_prompt]
-  background = 'transparent'
-  foreground = 'p:pink'
-  template = '{{ .Path }} '
-
 [[blocks]]
   type = 'prompt'
   alignment = 'left'
