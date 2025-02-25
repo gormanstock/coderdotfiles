@@ -15,9 +15,9 @@ final_space = true
   notice = false
 
 [transient_prompt]
-  background = "transparent"
+  background = 'transparent'
   foreground = 'p:pink'
-  template = "{{ .Folder }} "
+  template = '{{ .Folder }} '
 
 [[blocks]]
   type = 'prompt'
