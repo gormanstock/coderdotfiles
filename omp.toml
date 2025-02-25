@@ -73,3 +73,5 @@ final_space = true
       revert_icon = ' '
       tag_icon = ' '
       branch_max_length = 6
+    [blocks.segmentsproperties.mapped_branches]
+      "staging" = "👷"
