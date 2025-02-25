@@ -35,14 +35,15 @@ final_space = true
       home_icon = '~'
       style = 'agnoster_short'
     [blocks.segments.properties.mapped_locations]
-      "/workspaces/lyra" = "/lyra"
-      "/workspaces/coyote" = "/coyote"
-      "/workspaces/gemini" = "/gemini"
-      "/workspaces/csdev" = "/csdev"
-      "/workspaces/cetus" = "/cetus"
-      "/workspaces/dsl" = "/dsl"
-      "/workspaces/falco" = "/falco"
-      "/workspaces/falco-web-lite" = "/falco-web-lite"
+      "/workspaces/lyra" = " lyra"
+      "/workspaces/coyote" = " coyote"
+      "/workspaces/gemini" = " gemini"
+      "/workspaces/csdev" = " csdev"
+      "/workspaces/cetus" = " cetus"
+      "/workspaces/dsl" = " dsl"
+      "/workspaces/falco" = " falco"
+      "/workspaces/falco-web-lite" = " falco-web-lite"
+      "/workspaces" = ""
   
     [[blocks.segments]]
     template = ''
