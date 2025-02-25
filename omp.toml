@@ -35,6 +35,7 @@ final_space = true
       home_icon = '~'
       style = 'agnoster_short'
     [blocks.segments.properties.mapped_locations]
+      "/workspaces" = "󰳗 "
       "/workspaces/lyra" = "󰳗 lyra"
       "/workspaces/coyote" = "󰳗 coyote"
       "/workspaces/gemini" = "󰳗 gemini"
