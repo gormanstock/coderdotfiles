@@ -5,11 +5,12 @@
 echo "--- Starting Remote Fish Configuration Setup ---"
 echo ""
 
-# --- START: OH MY FISH (OMF) SETUP ---
+## 🐠 Oh My Fish (OMF) Setup
+# --------------------------------------------------------
 
 # Check if the Oh My Fish directory exists
 if not test -d "$HOME/.local/share/omf"
-    echo "Oh My Fish not found. Attempting manual installation..."
+    echo "Oh My Fish not found. Attempting manual installation via Git clone..."
     
     if command -q git
         set -l temp_omf_dir "/tmp/oh-my-fish-temp"
@@ -17,14 +18,13 @@ if not test -d "$HOME/.local/share/omf"
 
         # 1. Clone the repository to a temporary location
         echo "Cloning OMF repository to $temp_omf_dir..."
-        # Use 2>/dev/null to suppress common git output that might confuse the user
         git clone https://github.com/oh-my-fish/oh-my-fish $temp_omf_dir 2>/dev/null
 
         if test -d $temp_omf_dir
             # 2. Run the install script from the cloned repo
             echo "Running OMF install script..."
-            # Use --offline to avoid external downloads, and run directly
-            fish $omf_install_bin --offline
+            # Running the installer directly without the potentially ambiguous --offline flag
+            fish $omf_install_bin
             
             # 3. Clean up the temporary clone directory
             rm -rf $temp_omf_dir
@@ -59,11 +59,8 @@ else
     
 end
 
-# --- END: OH MY FISH (OMF) SETUP ---
-
-echo "--------------------------------------------------------"
-
-# --- START: LAZYGIT SETUP ---
+---
+## 💻 Lazygit Setup
 
 echo "--- Lazygit Setup ---"
 
@@ -95,3 +92,84 @@ else
         
         # 2. Download the tarball to a temporary location using -o
         echo "Downloading Lazygit..."
+        curl -Lo /tmp/lazygit.tar.gz "$LAZYGIT_DOWNLOAD_URL"
+        
+        # 3. Extract the binary
+        echo "Extracting binary..."
+        tar -xzf /tmp/lazygit.tar.gz -C /tmp
+        
+        # 4. Install the binary to the local bin path
+        if test -f /tmp/lazygit
+            install /tmp/lazygit "$local_bin"
+            echo "Lazygit installed successfully to $local_bin/lazygit"
+        else
+            echo "Error: Lazygit binary not found after extraction."
+        end
+
+        # 5. Clean up
+        rm /tmp/lazygit.tar.gz /tmp/lazygit 2>/dev/null
+    end
+end
+
+---
+## 🛠️ Fish Alias & Git Configuration
+
+echo "--- Fish Alias & Git Configuration Setup ---"
+
+# 1. Add the persistent fish alias
+echo "Setting persistent fish alias: gitcommands -> 'git config --list --show-origin'"
+func -f gitcommands 'git config --list --show-origin'
+func -s gitcommands # Saves the function for persistence
+
+# 2. Apply all Git configuration settings using `git config --global`
+
+# Core settings
+git config --global core.editor 'code --wait'
+git config --global pull.rebase false 
+git config --global merge.conflictstyle diff3
+git config --global rebase.instructionFormat '"(%an <%ae>) %s"'
+
+# Credential helper
+git config --global credential.helper '/usr/bin/gp credential-helper'
+
+# LFS filter
+git config --global filter.lfs.clean 'git-lfs clean -- %f'
+git config --global filter.lfs.smudge 'git-lfs smudge -- %f'
+git config --global filter.lfs.process 'git-lfs filter-process'
+git config --global filter.lfs.required true
+
+# Push and Help
+git config --global push.default simple
+git config --global help.autocorrect 20
+
+# Aliases
+git config --global alias.fixup '!git add . && git commit --fixup=${1:-$(git rev-parse HEAD)} && GIT_EDITOR=true git rebase --interactive --autosquash ${1:-$(git rev-parse HEAD~2)}~1'
+git config --global alias.fileschanged 'diff HEAD^ HEAD --name-only'
+git config --global alias.fc 'diff --name-only HEAD~1 HEAD'
+git config --global alias.to 'commit -a --amend --no-edit'
+git config --global alias.tackon 'commit -a --amend --no-edit'
+git config --global alias.st 'status'
+git config --global alias.dt 'difftool HEAD^ HEAD --no-prompt'
+git config --global alias.temp 'checkout temp'
+git config --global alias.sd 'branch --delete'
+git config --global alias.safedelete 'branch --delete'
+git config --global alias.sami 'clean -dn'
+git config --global alias.druggedfox 'clean -df'
+git config --global alias.morning 'commit -a'
+git config --global alias.remessage 'commit --amend'
+git config --global alias.rip '!git reset HEAD~1 $1' 
+git config --global alias.ripout '!git reset HEAD~1 $1 && git checkout -- .'
+git config --global alias.ro 'reset HEAD~1'
+git config --global alias.nored 'checkout -- .'
+git config --global alias.nogreen 'reset HEAD .'
+git config --global alias.lg 'log --color --graph --pretty=format:%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset --abbrev-commit'
+git config --global alias.cane 'commit --amend --no-edit'
+git config --global alias.cod 'checkout `git branch --contains HEAD --no-merged | head -1`'
+git config --global alias.fcs 'diff --name-only'
+git config --global alias.us 'submodule update --recursive --remote'
+git config --global alias.updatesubmodules 'submodule update --recursive --remote'
+
+echo "All Git configurations applied to $HOME/.gitconfig."
+
+echo ""
+echo "🎉 Setup run complete!"
