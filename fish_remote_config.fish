@@ -5,11 +5,12 @@
 echo "--- Starting Remote Fish Configuration Setup ---"
 echo ""
 
-## 🐠 Oh My Fish (OMF) Setup
+# 🐠 Oh My Fish (OMF) Setup
 # --------------------------------------------------------
 
 # Define the expected OMF data directory explicitly
 set -l OMF_DATA_DIR "$HOME/.local/share/omf"
+set -l OMF_CONFIG_DIR "$HOME/.config/omf"
 
 # Check if the Oh My Fish directory exists
 if not test -d "$OMF_DATA_DIR"
@@ -28,9 +29,8 @@ if not test -d "$OMF_DATA_DIR"
             echo "Running OMF install script..."
             
             # --- CRITICAL FIX: Explicitly set OMF environment variables ---
-            # Set OMF_CONFIG to force the install to the desired location.
-            # OMF will use this for both its config and data directories.
-            env OMF_CONFIG="$HOME/.config/omf" fish $omf_install_bin
+            # Set OMF_CONFIG to force the install to a known writable location.
+            env OMF_CONFIG="$OMF_CONFIG_DIR" fish $omf_install_bin
             
             # 3. Clean up the temporary clone directory
             rm -rf $temp_omf_dir
@@ -68,8 +68,9 @@ else
     
 end
 
----
-## 💻 Lazygit Setup
+# --------------------------------------------------------
+# 💻 Lazygit Setup
+# --------------------------------------------------------
 
 echo "--- Lazygit Setup ---"
 
@@ -120,8 +121,9 @@ else
     end
 end
 
----
-## 🛠️ Fish Alias & Git Configuration
+# --------------------------------------------------------
+# 🛠️ Fish Alias & Git Configuration
+# --------------------------------------------------------
 
 echo "--- Fish Alias & Git Configuration Setup ---"
 
