@@ -8,9 +8,12 @@ echo ""
 ## 🐠 Oh My Fish (OMF) Setup
 # --------------------------------------------------------
 
+# Define the expected OMF data directory explicitly
+set -l OMF_DATA_DIR "$HOME/.local/share/omf"
+
 # Check if the Oh My Fish directory exists
-if not test -d "$HOME/.local/share/omf"
-    echo "Oh My Fish not found. Attempting manual installation via Git clone..."
+if not test -d "$OMF_DATA_DIR"
+    echo "Oh My Fish not found. Attempting manual installation with explicit paths..."
     
     if command -q git
         set -l temp_omf_dir "/tmp/oh-my-fish-temp"
@@ -21,10 +24,13 @@ if not test -d "$HOME/.local/share/omf"
         git clone https://github.com/oh-my-fish/oh-my-fish $temp_omf_dir 2>/dev/null
 
         if test -d $temp_omf_dir
-            # 2. Run the install script from the cloned repo
+            # 2. Run the install script from the cloned repo with explicit environment variables
             echo "Running OMF install script..."
-            # Running the installer directly without the potentially ambiguous --offline flag
-            fish $omf_install_bin
+            
+            # --- CRITICAL FIX: Explicitly set OMF environment variables ---
+            # Set OMF_CONFIG to force the install to the desired location.
+            # OMF will use this for both its config and data directories.
+            env OMF_CONFIG="$HOME/.config/omf" fish $omf_install_bin
             
             # 3. Clean up the temporary clone directory
             rm -rf $temp_omf_dir
@@ -39,12 +45,15 @@ if not test -d "$HOME/.local/share/omf"
     
 else
     # --- (OMF Found Block - Run on second execution) ---
-    echo "Oh My Fish found. Proceeding with theme and config setup."
+    echo "Oh My Fish found at $OMF_DATA_DIR. Proceeding with theme and config setup."
     
-    # Source OMF init script if available, to make 'omf' command available
-    set -l omf_init_path "$HOME/.local/share/omf/init.fish"
+    # Source OMF init script to make 'omf' command available
+    # OMF's init path is often $XDG_DATA_HOME/omf/init.fish
+    set -l omf_init_path "$OMF_DATA_DIR/init.fish"
     if test -f "$omf_init_path"
         source "$omf_init_path"
+    else
+        echo "Warning: OMF init file not found at $omf_init_path. Skipping theme install."
     end
     
     echo "Installing 'bobthefish' theme..."
