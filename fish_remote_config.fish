@@ -48,7 +48,6 @@ else
     echo "Oh My Fish found at $OMF_DATA_DIR. Proceeding with theme and config setup."
     
     # Source OMF init script to make 'omf' command available
-    # OMF's init path is often $XDG_DATA_HOME/omf/init.fish
     set -l omf_init_path "$OMF_DATA_DIR/init.fish"
     if test -f "$omf_init_path"
         source "$omf_init_path"
@@ -129,8 +128,20 @@ echo "--- Fish Alias & Git Configuration Setup ---"
 
 # 1. Add the persistent fish alias
 echo "Setting persistent fish alias: gitcommands -> 'git config --list --show-origin'"
-func -f gitcommands 'git config --list --show-origin'
-func -s gitcommands # Saves the function for persistence
+
+# --- FIX: Replace missing 'func' command with direct config.fish write ---
+set -l alias_definition "alias gitcommands 'git config --list --show-origin'"
+set -l config_file "$HOME/.config/fish/config.fish"
+
+# Check if the alias already exists in the config file before appending
+if not grep -qF "$alias_definition" "$config_file" 
+    echo $alias_definition >> "$config_file"
+    echo "Alias added to config.fish for persistence."
+else
+    echo "Alias already exists in config.fish."
+end
+# --- END FIX ---
+
 
 # 2. Apply all Git configuration settings using `git config --global`
 
