@@ -130,7 +130,7 @@ echo "--- Fish Alias & Git Configuration Setup ---"
 echo "Setting persistent fish alias: gitcommands -> 'git config --list --show-origin'"
 
 # --- FIX: Replace missing 'func' command with direct config.fish write ---
-set -l alias_definition "alias gitcommands 'git config --list --show-origin'"
+set -l alias_definition "alias gitcommands='git config --list --show-origin'"
 set -l config_file "$HOME/.config/fish/config.fish"
 
 # Check if the alias already exists in the config file before appending
