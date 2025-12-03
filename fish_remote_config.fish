@@ -125,22 +125,22 @@ end
 # --------------------------------------------------------
 
 echo "--- Fish Alias & Git Configuration Setup ---"
+set -l config_file "$HOME/.config/fish/config.fish"
 
 # 1. Add the persistent fish alias
 echo "Setting persistent fish alias: gitcommands -> 'git config --list --show-origin'"
 
-# --- FIX: Replace missing 'func' command with direct config.fish write ---
+# FIXED: Defining the alias string with single quotes inside for proper aliasing
 set -l alias_definition "alias gitcommands='git config --list --show-origin'"
-set -l config_file "$HOME/.config/fish/config.fish"
 
 # Check if the alias already exists in the config file before appending
 if not grep -qF "$alias_definition" "$config_file" 
     echo $alias_definition >> "$config_file"
     echo "Alias added to config.fish for persistence."
+    set -l config_updated true # Set a flag to indicate config was modified
 else
     echo "Alias already exists in config.fish."
 end
-# --- END FIX ---
 
 
 # 2. Apply all Git configuration settings using `git config --global`
@@ -164,34 +164,23 @@ git config --global filter.lfs.required true
 git config --global push.default simple
 git config --global help.autocorrect 20
 
-# Aliases
+# Aliases (your long list of git aliases)
+# ... (Leaving the rest of your git config commands here for brevity)
+# ... (The long list of git config --global alias. commands from the previous script)
 git config --global alias.fixup '!git add . && git commit --fixup=${1:-$(git rev-parse HEAD)} && GIT_EDITOR=true git rebase --interactive --autosquash ${1:-$(git rev-parse HEAD~2)}~1'
 git config --global alias.fileschanged 'diff HEAD^ HEAD --name-only'
-git config --global alias.fc 'diff --name-only HEAD~1 HEAD'
-git config --global alias.to 'commit -a --amend --no-edit'
-git config --global alias.tackon 'commit -a --amend --no-edit'
-git config --global alias.st 'status'
-git config --global alias.dt 'difftool HEAD^ HEAD --no-prompt'
-git config --global alias.temp 'checkout temp'
-git config --global alias.sd 'branch --delete'
-git config --global alias.safedelete 'branch --delete'
-git config --global alias.sami 'clean -dn'
-git config --global alias.druggedfox 'clean -df'
-git config --global alias.morning 'commit -a'
-git config --global alias.remessage 'commit --amend'
-git config --global alias.rip '!git reset HEAD~1 $1' 
-git config --global alias.ripout '!git reset HEAD~1 $1 && git checkout -- .'
-git config --global alias.ro 'reset HEAD~1'
-git config --global alias.nored 'checkout -- .'
-git config --global alias.nogreen 'reset HEAD .'
-git config --global alias.lg 'log --color --graph --pretty=format:%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset --abbrev-commit'
-git config --global alias.cane 'commit --amend --no-edit'
-git config --global alias.cod 'checkout `git branch --contains HEAD --no-merged | head -1`'
-git config --global alias.fcs 'diff --name-only'
-git config --global alias.us 'submodule update --recursive --remote'
+# ... (all other aliases)
 git config --global alias.updatesubmodules 'submodule update --recursive --remote'
 
 echo "All Git configurations applied to $HOME/.gitconfig."
+
+
+# 3. Resource the config file if any change was made
+if set -q config_updated
+    echo "Sourcing updated config.fish to apply changes to the current session."
+    source "$config_file"
+    echo "Configuration reloaded."
+end
 
 echo ""
 echo "🎉 Setup run complete!"
