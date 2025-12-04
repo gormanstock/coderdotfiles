@@ -165,11 +165,30 @@ git config --global push.default simple
 git config --global help.autocorrect 20
 
 # Aliases (your long list of git aliases)
-# ... (Leaving the rest of your git config commands here for brevity)
-# ... (The long list of git config --global alias. commands from the previous script)
 git config --global alias.fixup '!git add . && git commit --fixup=${1:-$(git rev-parse HEAD)} && GIT_EDITOR=true git rebase --interactive --autosquash ${1:-$(git rev-parse HEAD~2)}~1'
 git config --global alias.fileschanged 'diff HEAD^ HEAD --name-only'
-# ... (all other aliases)
+git config --global alias.fc 'diff --name-only HEAD~1 HEAD'
+git config --global alias.to 'commit -a --amend --no-edit'
+git config --global alias.tackon 'commit -a --amend --no-edit'
+git config --global alias.st 'status'
+git config --global alias.dt 'difftool HEAD^ HEAD --no-prompt'
+git config --global alias.temp 'checkout temp'
+git config --global alias.sd 'branch --delete'
+git config --global alias.safedelete 'branch --delete'
+git config --global alias.sami 'clean -dn'
+git config --global alias.druggedfox 'clean -df'
+git config --global alias.morning 'commit -a'
+git config --global alias.remessage 'commit --amend'
+git config --global alias.rip '!git reset HEAD~1 $1' 
+git config --global alias.ripout '!git reset HEAD~1 $1 && git checkout -- .'
+git config --global alias.ro 'reset HEAD~1'
+git config --global alias.nored 'checkout -- .'
+git config --global alias.nogreen 'reset HEAD .'
+git config --global alias.lg 'log --color --graph --pretty=format:%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset --abbrev-commit'
+git config --global alias.cane 'commit --amend --no-edit'
+git config --global alias.cod 'checkout `git branch --contains HEAD --no-merged | head -1`'
+git config --global alias.fcs 'diff --name-only'
+git config --global alias.us 'submodule update --recursive --remote'
 git config --global alias.updatesubmodules 'submodule update --recursive --remote'
 
 echo "All Git configurations applied to $HOME/.gitconfig."
