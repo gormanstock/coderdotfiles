@@ -11,6 +11,7 @@ echo ""
 # Define the expected OMF data directory explicitly
 set -l OMF_DATA_DIR "$HOME/.local/share/omf"
 set -l OMF_CONFIG_DIR "$HOME/.config/omf"
+set -l config_file "$HOME/.config/fish/config.fish"
 
 # Check if the Oh My Fish directory exists
 if not test -d "$OMF_DATA_DIR"
@@ -27,9 +28,6 @@ if not test -d "$OMF_DATA_DIR"
         if test -d $temp_omf_dir
             # 2. Run the install script from the cloned repo with explicit environment variables
             echo "Running OMF install script..."
-            
-            # --- CRITICAL FIX: Explicitly set OMF environment variables ---
-            # Set OMF_CONFIG to force the install to a known writable location.
             env OMF_CONFIG="$OMF_CONFIG_DIR" fish $omf_install_bin
             
             # 3. Clean up the temporary clone directory
@@ -44,26 +42,55 @@ if not test -d "$OMF_DATA_DIR"
     end
     
 else
-    # --- (OMF Found Block - Run on second execution) ---
-    echo "Oh My Fish found at $OMF_DATA_DIR. Proceeding with theme and config setup."
+    # --- (OMF Found Block - PERSISTENCE FIX APPLIED HERE) ---
+    echo "Oh My Fish found at $OMF_DATA_DIR. Ensuring theme persistence."
     
     # Source OMF init script to make 'omf' command available
     set -l omf_init_path "$OMF_DATA_DIR/init.fish"
     if test -f "$omf_init_path"
         source "$omf_init_path"
     else
-        echo "Warning: OMF init file not found at $omf_init_path. Skipping theme install."
+        echo "Warning: OMF init file not found at $omf_init_path."
     end
     
+    # Install theme (needed if it was deleted, harmless if present)
     echo "Installing 'bobthefish' theme..."
     omf install bobthefish 2>/dev/null
     
-    # Set theme configurations (will automatically save to $HOME/.config/fish/config.fish)
-    echo "Setting bobthefish configurations (Nerd Fonts and Nord color scheme)..."
-    set -g theme_nerd_fonts yes
-    set -g theme_color_scheme nord
+    # --- CRITICAL PERSISTENCE FIX: Write activation commands to config.fish ---
+    echo "Writing theme activation commands to $config_file..."
+    set -l config_updated false
     
-    echo "OMF configuration complete."
+    # 1. Theme Activation Command
+    set -l theme_command "omf theme bobthefish"
+    if not grep -qF "$theme_command" "$config_file"
+        echo $theme_command >> "$config_file"
+        set config_updated true
+    end
+
+    # 2. Theme Variable 1 (Nerd Fonts)
+    set -l nerd_fonts_command "set -g theme_nerd_fonts yes"
+    if not grep -qF "$nerd_fonts_command" "$config_file"
+        echo $nerd_fonts_command >> "$config_file"
+        set config_updated true
+    end
+    
+    # 3. Theme Variable 2 (Nord Color Scheme)
+    set -l color_scheme_command "set -g theme_color_scheme nord"
+    if not grep -qF "$color_scheme_command" "$config_file"
+        echo $color_scheme_command >> "$config_file"
+        set config_updated true
+    end
+    
+    if $config_updated
+        echo "Theme configurations added to config.fish."
+    else
+        echo "Theme configurations already present in config.fish."
+    end
+    
+    # Source config.fish to apply these new changes immediately to the current session
+    source "$config_file"
+    echo "OMF configuration reloaded."
     
 end
 
@@ -125,19 +152,18 @@ end
 # --------------------------------------------------------
 
 echo "--- Fish Alias & Git Configuration Setup ---"
-set -l config_file "$HOME/.config/fish/config.fish"
 
 # 1. Add the persistent fish alias
 echo "Setting persistent fish alias: gitcommands -> 'git config --list --show-origin'"
 
-# FIXED: Defining the alias string with single quotes inside for proper aliasing
+# FIXED: Direct config.fish write for alias persistence
 set -l alias_definition "alias gitcommands='git config --list --show-origin'"
 
 # Check if the alias already exists in the config file before appending
 if not grep -qF "$alias_definition" "$config_file" 
     echo $alias_definition >> "$config_file"
     echo "Alias added to config.fish for persistence."
-    set -l config_updated true # Set a flag to indicate config was modified
+    set config_updated true
 else
     echo "Alias already exists in config.fish."
 end
@@ -164,7 +190,7 @@ git config --global filter.lfs.required true
 git config --global push.default simple
 git config --global help.autocorrect 20
 
-# Aliases (your long list of git aliases)
+# Aliases
 git config --global alias.fixup '!git add . && git commit --fixup=${1:-$(git rev-parse HEAD)} && GIT_EDITOR=true git rebase --interactive --autosquash ${1:-$(git rev-parse HEAD~2)}~1'
 git config --global alias.fileschanged 'diff HEAD^ HEAD --name-only'
 git config --global alias.fc 'diff --name-only HEAD~1 HEAD'
@@ -193,8 +219,7 @@ git config --global alias.updatesubmodules 'submodule update --recursive --remot
 
 echo "All Git configurations applied to $HOME/.gitconfig."
 
-
-# 3. Resource the config file if any change was made
+# 3. Source the config file if any change was made (resourcing the config.fish file)
 if set -q config_updated
     echo "Sourcing updated config.fish to apply changes to the current session."
     source "$config_file"
