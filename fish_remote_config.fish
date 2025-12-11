@@ -61,25 +61,24 @@ else
     echo "Writing theme activation commands to $config_file..."
     set -l config_updated false
     
-    # 1. Theme Activation Command
-    set -l theme_command "omf theme bobthefish"
-    if not grep -qF "$theme_command" "$config_file"
-        echo $theme_command >> "$config_file"
-        set config_updated true
-    end
-
-    # 2. Theme Variable 1 (Nerd Fonts)
-    set -l nerd_fonts_command "set -g theme_nerd_fonts yes"
-    if not grep -qF "$nerd_fonts_command" "$config_file"
-        echo $nerd_fonts_command >> "$config_file"
-        set config_updated true
-    end
+    # Define ALL theme commands in a single array
+    set -l theme_commands (
+        "omf theme bobthefish"
+        "set -g theme_nerd_fonts yes"
+        "set -g theme_color_scheme nord"
+        "set -g theme_show_project_parent no"
+        "set -g theme_display_user no"  
+        "set -g theme_display_hostname no"
+        "set -g theme_display_ruby no"
+    )
     
-    # 3. Theme Variable 2 (Nord Color Scheme)
-    set -l color_scheme_command "set -g theme_color_scheme nord"
-    if not grep -qF "$color_scheme_command" "$config_file"
-        echo $color_scheme_command >> "$config_file"
-        set config_updated true
+    # Loop through the list of commands
+    for command_to_add in $theme_commands
+        # Use grep -qF to quickly check if the exact command line exists in the config file
+        if not grep -qF "$command_to_add" "$config_file"
+            echo "$command_to_add" >> "$config_file"
+            set config_updated true
+        end
     end
     
     if $config_updated
@@ -92,7 +91,7 @@ else
     source "$config_file"
     echo "OMF configuration reloaded."
     
-end
+    end
 
 # --------------------------------------------------------
 # 💻 Lazygit Setup
