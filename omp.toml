@@ -3,20 +3,16 @@ final_space = true
 
 [palette]
   blue = '#8CAAEE'
-  closer = 'p:os'
+  closer = '#ACB0BE'
   lavender = '#BABBF1'
   os = '#ACB0BE'
   pink = '#F4B8E4'
 
-[upgrade]
-  source = 'cdn'
-  interval = '168h'
-  auto = false
-  notice = false
-
 [[blocks]]
   type = 'prompt'
   alignment = 'left'
+  # This ensures no extra newline is added after this block
+  newline = false 
 
   [[blocks.segments]]
     template = '🐢 '
@@ -29,30 +25,19 @@ final_space = true
     foreground = 'p:pink'
     type = 'path'
     style = 'plain'
-
     [blocks.segments.properties]
-      folder_icon = '' # Removed the .. surrounds
+      folder_icon = ''
       home_icon = '~'
       style = 'agnoster_short'
-    [blocks.segments.properties.mapped_locations]
-      "/workspaces" = "󰳗 "
-      "/workspaces/lyra" = "󰳗 lyra"
-      "/workspaces/coyote" = "󰳗 coyote"
-      "/workspaces/gemini" = "󰳗 gemini"
-      "/workspaces/csdev" = "󰳗 csdev"
-      "/workspaces/cetus" = "󰳗 cetus"
-      "/workspaces/dsl" = "󰳗 dsl"
-      "/workspaces/falco" = "󰳗 falco"
-      "/workspaces/falco-web-lite" = "󰳗 falco-web-lite"
-  
+
   [[blocks.segments]]
-    template = ''
+    template = ' '
     foreground = 'p:closer'
     type = 'text'
     style = 'plain'
 
 [[blocks]]
-  type = 'prompt'
+  type = 'rprompt' # Changed from 'prompt' to 'rprompt'
   alignment = 'right'
 
   [[blocks.segments]]
@@ -60,18 +45,6 @@ final_space = true
     foreground = 'p:lavender'
     type = 'git'
     style = 'plain'
-
     [blocks.segments.properties]
       branch_icon = ' '
-      cherry_pick_icon = ' '
-      commit_icon = ' '
-      fetch_status = false
-      fetch_upstream_icon = false
-      merge_icon = ' '
-      no_commits_icon = ' '
-      rebase_icon = ' '
-      revert_icon = ' '
-      tag_icon = ' '
       branch_max_length = 6
-    [blocks.segments.properties.mapped_branches]
-      "staging" = "👷"
