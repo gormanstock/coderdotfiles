@@ -123,6 +123,36 @@ ZSH_THEME=agnoster
 #ZSH_THEME_GIT_PROMPT_CLEAN="%{$fg[blue]%})"
 #----------------------------------------------------------
 
+# 1. Ensure local binaries are in your PATH
+export PATH="$HOME/.local/bin:$PATH"
+
+# 2. Automated Lazygit Checker/Installer
+if ! command -v lazygit &> /dev/null; then
+    echo "--- 🛠️ Lazygit not found. Installing to ~/.local/bin... ---"
+    
+    # Create directory if it doesn't exist
+    mkdir -p "$HOME/.local/bin"
+    
+    # Get latest version from GitHub API
+    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    
+    if [ -n "$LAZYGIT_VERSION" ]; then
+        # Download, extract and install
+        curl -Lo /tmp/lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+        tar -xf /tmp/lazygit.tar.gz -C /tmp
+        install /tmp/lazygit "$HOME/.local/bin"
+        
+        # Cleanup
+        rm /tmp/lazygit /tmp/lazygit.tar.gz
+        echo "✅ Lazygit v$LAZYGIT_VERSION installed successfully!"
+    else
+        echo "❌ Error: Could not fetch Lazygit version. Check your internet connection."
+    fi
+fi
+
+# 3. Alias for convenience
+alias lg="lazygit"
+
 export HISTSIZE=10000
 export HISEFILESIZE=10000
 export HISTFILE=/workspace/.zhistory
