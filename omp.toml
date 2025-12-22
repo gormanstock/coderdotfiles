@@ -19,7 +19,7 @@ final_space = true
   alignment = 'left'
 
   [[blocks.segments]]
-    template = '{{.Icon}} '
+    template = '🐢 '
     foreground = 'p:os'
     type = 'os'
     style = 'plain'
@@ -31,7 +31,7 @@ final_space = true
     style = 'plain'
 
     [blocks.segments.properties]
-      folder_icon = '....'
+      folder_icon = '' # Removed the .. surrounds
       home_icon = '~'
       style = 'agnoster_short'
     [blocks.segments.properties.mapped_locations]
@@ -45,7 +45,7 @@ final_space = true
       "/workspaces/falco" = "󰳗 falco"
       "/workspaces/falco-web-lite" = "󰳗 falco-web-lite"
   
-    [[blocks.segments]]
+  [[blocks.segments]]
     template = ''
     foreground = 'p:closer'
     type = 'text'
@@ -73,5 +73,5 @@ final_space = true
       revert_icon = ' '
       tag_icon = ' '
       branch_max_length = 6
-    [blocks.segmentsproperties.mapped_branches]
+    [blocks.segments.properties.mapped_branches]
       "staging" = "👷"
