@@ -7,11 +7,11 @@ final_space = true
   lavender = '#BABBF1'
   os = '#ACB0BE'
   pink = '#F4B8E4'
+  danger = '#FF5555'
 
 [[blocks]]
   type = 'prompt'
   alignment = 'left'
-  # This ensures no extra newline is added after this block
   newline = false 
 
   [[blocks.segments]]
@@ -27,8 +27,16 @@ final_space = true
     style = 'plain'
     [blocks.segments.properties]
       folder_icon = ''
-      home_icon = '~'
+      home_icon = ' ~'
       style = 'agnoster_short'
+      # ADD YOUR SPECIAL DIRECTORY ICONS HERE:
+      [blocks.segments.properties.mapped_locations]
+        "/workspaces" = "🏠 "
+        "~/coyote" = "🐺 "
+        "~/beeline" = "🐝_ "
+        "~/lyra" = "🪉 "
+        "~/falco-web-lite" = "🐦🚚 "
+        "~/falco" = "🐦 "
 
   [[blocks.segments]]
     template = ' '
@@ -37,14 +45,17 @@ final_space = true
     style = 'plain'
 
 [[blocks]]
-  type = 'rprompt' # Changed from 'prompt' to 'rprompt'
+  type = 'rprompt'
   alignment = 'right'
 
   [[blocks.segments]]
-    template = '{{ .HEAD }} '
+    # This template checks if we are in a git repo. 
+    # If yes: shows branch icon + name. If no: shows warning.
+    template = "{{ if .UpstreamIcon }}{{ .UpstreamIcon }}{{ .HEAD }}{{ else }}%F{p:danger} no branch%f{{ end }} "
     foreground = 'p:lavender'
     type = 'git'
     style = 'plain'
     [blocks.segments.properties]
       branch_icon = ' '
-      branch_max_length = 6
+      branch_max_length = 10
+      fetch_status = true
