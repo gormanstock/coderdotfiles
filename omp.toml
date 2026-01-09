@@ -29,14 +29,11 @@ final_space = true
       folder_icon = ''
       home_icon = ' ~'
       style = 'agnoster_short'
-      # ADD YOUR SPECIAL DIRECTORY ICONS HERE:
+      # Special directory icons
       [blocks.segments.properties.mapped_locations]
-        "/workspaces" = "🏠 "
-        "~/coyote" = "🐺 "
-        "~/beeline" = "🐝_ "
-        "~/lyra" = "🪉 "
-        "~/falco-web-lite" = "🐦🚚 "
-        "~/falco" = "🐦 "
+        "/workspaces" = "󰳗 "
+        "/workspaces/beeline" = "🐝 beeline"
+        "~/Downloads" = " "
 
   [[blocks.segments]]
     template = ' '
@@ -49,13 +46,16 @@ final_space = true
   alignment = 'right'
 
   [[blocks.segments]]
-    # This template checks if we are in a git repo. 
-    # If yes: shows branch icon + name. If no: shows warning.
-    template = "{{ if .UpstreamIcon }}{{ .UpstreamIcon }}{{ .HEAD }}{{ else }}%F{p:danger} no branch%f{{ end }} "
-    foreground = 'p:lavender'
+    # FIXED LOGIC: If .HEAD exists, show the branch. Otherwise, show the warning.
+    template = """
+      {{ if .HEAD }}
+        <p:lavender> {{ .HEAD }}</>
+      {{ else }}
+        <p:danger> no branch</>
+      {{ end }}
+    """
     type = 'git'
     style = 'plain'
     [blocks.segments.properties]
-      branch_icon = ' '
-      branch_max_length = 10
       fetch_status = true
+      branch_max_length = 10
