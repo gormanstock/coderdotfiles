@@ -29,8 +29,11 @@ if not test -d "$OMF_DATA_DIR"
 
         if test -d $temp_omf_dir
             echo "Running OMF install script..."
-            # Use --noninteractive --yes to install without prompting
-            env OMF_CONFIG="$OMF_CONFIG_DIR" fish $omf_install_bin --noninteractive --yes
+            
+            # FIXED: Explicitly tell installer where to put files using --path and --config
+            # This guarantees that $OMF_DATA_DIR matches where the files actually go.
+            fish $omf_install_bin --path="$OMF_DATA_DIR" --config="$OMF_CONFIG_DIR" --noninteractive --yes
+            
             rm -rf $temp_omf_dir
         else
             echo "Error: Failed to clone the OMF repository. Skipping OMF setup."
@@ -40,47 +43,54 @@ if not test -d "$OMF_DATA_DIR"
     end
 end
 
-# 2. Configure OMF (Only runs if installation succeeded)
+# 2. Configure OMF (Only runs if init.fish exists)
 if test -f "$omf_init_path"
-    echo "Initializing Oh My Fish..."
+    echo "Initializing Oh My Fish from $omf_init_path..."
     source "$omf_init_path"
 
-    # Install Theme
-    echo "Installing 'bobthefish' theme..."
-    omf install bobthefish 2>/dev/null
+    # 3. Check if 'omf' command is actually available now
+    if functions -q omf
+        echo "OMF command loaded successfully."
 
-    echo "Writing theme activation commands to $config_file..."
-    set -l config_updated false
+        # Install Theme
+        echo "Installing 'bobthefish' theme..."
+        omf install bobthefish 2>/dev/null
 
-    # Define ALL theme commands in a single array
-    set -l theme_commands \
-        "set -g theme_nerd_fonts yes" \
-        "set -g theme_color_scheme nord" \
-        "set -g theme_show_project_parent no" \
-        "set -g theme_display_user no"   \
-        "set -g theme_display_hostname no" \
-        "set -g theme_display_ruby no"
+        echo "Writing theme activation commands to $config_file..."
+        set -l config_updated false
 
-    # Loop through the list of commands
-    for command_to_add in $theme_commands
-        if not grep -qF "$command_to_add" "$config_file"
-            echo "$command_to_add" >> "$config_file"
-            set config_updated true
+        # Define theme variables (Removed 'omf theme bobthefish' to prevent loops)
+        set -l theme_commands \
+            "set -g theme_nerd_fonts yes" \
+            "set -g theme_color_scheme nord" \
+            "set -g theme_show_project_parent no" \
+            "set -g theme_display_user no"   \
+            "set -g theme_display_hostname no" \
+            "set -g theme_display_ruby no"
+
+        # Loop through the list of commands
+        for command_to_add in $theme_commands
+            if not grep -qF "$command_to_add" "$config_file"
+                echo "$command_to_add" >> "$config_file"
+                set config_updated true
+            end
         end
-    end
 
-    if $config_updated
-        echo "Theme configurations added to config.fish."
+        if $config_updated
+            echo "Theme configurations added to config.fish."
+        else
+            echo "Theme configurations already present in config.fish."
+        end
+        
+        # Source config.fish to apply changes
+        source "$config_file"
+        echo "OMF configuration loaded."
     else
-        echo "Theme configurations already present in config.fish."
+        echo "⚠️  Error: 'omf' function not found after sourcing init.fish. Skipping theme setup."
     end
-    
-    # Source config.fish to apply changes
-    source "$config_file"
-    echo "OMF configuration loaded."
 
 else
-    echo "⚠️  OMF init file not found. Skipping OMF configuration but continuing script..."
+    echo "⚠️  OMF init file not found at $omf_init_path. Installation might have failed."
 end
 
 # --------------------------------------------------------
