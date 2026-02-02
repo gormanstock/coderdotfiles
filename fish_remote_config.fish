@@ -52,6 +52,20 @@ end
 # 2. Configure OMF
 if test -f "$omf_init_path"
     echo "Initializing Oh My Fish from $omf_init_path..."
+
+    # CRITICAL FIX 1: Set OMF paths as Global variables so OMF sees them
+    set -gx OMF_PATH "$OMF_DATA_DIR"
+    set -gx OMF_CONFIG "$OMF_CONFIG_DIR"
+
+    # CRITICAL FIX 2: Manually source the library that defines 'require'
+    # This prevents the "Unknown command: require" error
+    if test -f "$OMF_PATH/lib/require.fish"
+        source "$OMF_PATH/lib/require.fish"
+    else
+        echo "⚠️  Warning: lib/require.fish not found."
+    end
+
+    # Now source the main init file
     source "$omf_init_path"
 
     # 3. Verify 'omf' command loaded
