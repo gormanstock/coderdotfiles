@@ -30,7 +30,9 @@ if not test -d "$OMF_DATA_DIR"
         if test -d $temp_omf_dir
             # 2. Run the install script from the cloned repo with explicit environment variables
             echo "Running OMF install script..."
-            env OMF_CONFIG="$OMF_CONFIG_DIR" fish $omf_install_bin
+            
+            # FIXED: Added --noninteractive --yes to prevent TTY errors in headless mode
+            env OMF_CONFIG="$OMF_CONFIG_DIR" fish $omf_install_bin --noninteractive --yes
             
             # 3. Clean up the temporary clone directory
             rm -rf $temp_omf_dir
