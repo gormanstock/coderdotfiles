@@ -14,57 +14,44 @@ echo ""
 set -l OMF_DATA_DIR "$HOME/.local/share/omf"
 set -l OMF_CONFIG_DIR "$HOME/.config/omf"
 set -l config_file "$HOME/.config/fish/config.fish"
+set -l omf_init_path "$OMF_DATA_DIR/init.fish"
 
-# Check if the Oh My Fish directory exists
+# 1. Install OMF if not present
 if not test -d "$OMF_DATA_DIR"
-    echo "Oh My Fish not found. Attempting manual installation with explicit paths..."
+    echo "Oh My Fish not found. Installing..."
     
     if command -q git
         set -l temp_omf_dir "/tmp/oh-my-fish-temp"
         set -l omf_install_bin "$temp_omf_dir/bin/install"
 
-        # 1. Clone the repository to a temporary location
         echo "Cloning OMF repository to $temp_omf_dir..."
         git clone https://github.com/oh-my-fish/oh-my-fish $temp_omf_dir 2>/dev/null
 
         if test -d $temp_omf_dir
-            # 2. Run the install script from the cloned repo with explicit environment variables
             echo "Running OMF install script..."
-            
-            # FIXED: Added --noninteractive --yes to prevent TTY errors in headless mode
+            # Use --noninteractive --yes to install without prompting
             env OMF_CONFIG="$OMF_CONFIG_DIR" fish $omf_install_bin --noninteractive --yes
-            
-            # 3. Clean up the temporary clone directory
             rm -rf $temp_omf_dir
-            
-            echo "Oh My Fish installation initiated. Run this setup command again to apply the theme and config."
         else
-            echo "Error: Failed to clone the OMF repository."
+            echo "Error: Failed to clone the OMF repository. Skipping OMF setup."
         end
     else
-        echo "Error: 'git' command not found. Cannot install Oh My Fish."
+        echo "Error: 'git' command not found. Skipping OMF setup."
     end
-    
-else
-    # --- (OMF Found Block - PERSISTENCE FIX APPLIED HERE) ---
-    echo "Oh My Fish found at $OMF_DATA_DIR. Ensuring theme persistence."
-    
-    # Source OMF init script to make 'omf' command available
-    set -l omf_init_path "$OMF_DATA_DIR/init.fish"
-    if test -f "$omf_init_path"
-        source "$omf_init_path"
-    else
-        echo "Warning: OMF init file not found at $omf_init_path."
-    end
-    
-    # Install theme (needed if it was deleted, harmless if present)
+end
+
+# 2. Configure OMF (Only runs if installation succeeded)
+if test -f "$omf_init_path"
+    echo "Initializing Oh My Fish..."
+    source "$omf_init_path"
+
+    # Install Theme
     echo "Installing 'bobthefish' theme..."
     omf install bobthefish 2>/dev/null
-    
-    # --- CRITICAL PERSISTENCE FIX: Write activation commands to config.fish ---
+
     echo "Writing theme activation commands to $config_file..."
     set -l config_updated false
-    
+
     # Define ALL theme commands in a single array
     set -l theme_commands \
         "omf theme bobthefish" \
@@ -74,27 +61,28 @@ else
         "set -g theme_display_user no"   \
         "set -g theme_display_hostname no" \
         "set -g theme_display_ruby no"
-    
+
     # Loop through the list of commands
     for command_to_add in $theme_commands
-        # Use grep -qF to quickly check if the exact command line exists in the config file
         if not grep -qF "$command_to_add" "$config_file"
             echo "$command_to_add" >> "$config_file"
             set config_updated true
         end
     end
-    
+
     if $config_updated
         echo "Theme configurations added to config.fish."
     else
         echo "Theme configurations already present in config.fish."
     end
     
-    # Source config.fish to apply these new changes immediately to the current session
+    # Source config.fish to apply changes
     source "$config_file"
-    echo "OMF configuration reloaded."
-    
-    end
+    echo "OMF configuration loaded."
+
+else
+    echo "⚠️  OMF init file not found. Skipping OMF configuration but continuing script..."
+end
 
 # --------------------------------------------------------
 # 💻 Lazygit Setup
