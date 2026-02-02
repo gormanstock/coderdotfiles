@@ -145,6 +145,27 @@ else
     end
 end
 
+# --- NEW: Download Lazygit Configuration ---
+echo "Updating Lazygit configuration..."
+
+set -l lazygit_config_dir "$HOME/.config/lazygit"
+set -l lazygit_config_file "$lazygit_config_dir/config.yml"
+set -l lazygit_raw_url "https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/lazygit_config.yml"
+
+# Ensure config directory exists
+if not test -d "$lazygit_config_dir"
+    mkdir -p "$lazygit_config_dir"
+end
+
+# Download the config file
+curl -sL -o "$lazygit_config_file" "$lazygit_raw_url"
+
+if test $status -eq 0
+    echo "Lazygit config successfully updated at $lazygit_config_file"
+else
+    echo "Error: Failed to download Lazygit config."
+end
+
 # --------------------------------------------------------
 # 🛠️ Fish Alias & Git Configuration
 # --------------------------------------------------------
