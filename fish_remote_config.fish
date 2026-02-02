@@ -43,15 +43,51 @@ else
     echo "OMF directory found. Skipping install."
 end
 
+# 🐠 Oh My Fish (OMF) Setup
+# --------------------------------------------------------
+
+# Define the expected OMF data directory explicitly
+set -l OMF_DATA_DIR "$HOME/.local/share/omf"
+set -l OMF_CONFIG_DIR "$HOME/.config/omf"
+set -l config_file "$HOME/.config/fish/config.fish"
+set -l omf_init_path "$OMF_DATA_DIR/init.fish"
+
+# 1. Install OMF (Direct Clone Method)
+if not test -d "$OMF_DATA_DIR"
+    echo "Oh My Fish not found. Bootstrapping via direct clone..."
+    
+    if not command -q git
+        echo "Error: 'git' command not found. Cannot install Oh My Fish."
+        exit 1
+    end
+
+    if not test -d "$OMF_CONFIG_DIR"
+        mkdir -p "$OMF_CONFIG_DIR"
+        echo "default" > "$OMF_CONFIG_DIR/theme"
+    end
+
+    echo "Cloning OMF repository..."
+    git clone --depth 1 https://github.com/oh-my-fish/oh-my-fish "$OMF_DATA_DIR"
+
+    if test $status -eq 0
+        echo "OMF Core cloned successfully."
+    else
+        echo "Error: Git clone failed."
+        exit 1
+    end
+else
+    echo "OMF directory found. Skipping install."
+end
+
 # 2. Configure OMF
 if test -f "$omf_init_path"
     echo "Initializing Oh My Fish from $omf_init_path..."
 
-    # Set OMF paths as Global variables so OMF sees them
+    # Set OMF paths as Global variables so the script sees them right now
     set -gx OMF_PATH "$OMF_DATA_DIR"
     set -gx OMF_CONFIG "$OMF_CONFIG_DIR"
 
-    # Manually source the library that defines 'require'
+    # Manually source the library that defines 'require' (For this script's session)
     if test -f "$OMF_PATH/lib/require.fish"
         source "$OMF_PATH/lib/require.fish"
     end
@@ -67,16 +103,17 @@ if test -f "$omf_init_path"
         echo "Installing 'bobthefish' theme..."
         omf install bobthefish 2>/dev/null
 
-        # --- CRITICAL FIX: Ensure OMF loads in future sessions ---
-        # Since we did a manual install, we must manually add the init line to config.fish
-        set -l omf_startup_line "source \$HOME/.local/share/omf/init.fish"
-        
-        if not grep -q "omf/init.fish" "$config_file"
+        # --- CRITICAL FIX: Ensure OMF loads correctly in future sessions ---
+        # We must define OMF_PATH in config.fish BEFORE sourcing init.fish
+        if not grep -q "set -gx OMF_PATH" "$config_file"
             echo "Adding OMF startup code to config.fish..."
-            # Prepend or Append? OMF usually likes to be at the top, but appending is safer for scripts.
+            
+            # We append the robust startup block
             echo "" >> "$config_file"
-            echo "# Load Oh My Fish configuration" >> "$config_file"
-            echo "$omf_startup_line" >> "$config_file"
+            echo "# Path to Oh My Fish install." >> "$config_file"
+            echo "set -gx OMF_PATH \"$OMF_DATA_DIR\"" >> "$config_file"
+            echo "set -gx OMF_CONFIG \"$OMF_CONFIG_DIR\"" >> "$config_file"
+            echo "source \"\$OMF_PATH/init.fish\"" >> "$config_file"
         end
         # ---------------------------------------------------------
 
@@ -103,6 +140,7 @@ if test -f "$omf_init_path"
             echo "Theme configurations added to config.fish."
         end
         
+        # Source config.fish to apply changes
         source "$config_file"
         echo "OMF configuration loaded."
     else
