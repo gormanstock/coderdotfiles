@@ -16,30 +16,45 @@ set -l OMF_CONFIG_DIR "$HOME/.config/omf"
 set -l config_file "$HOME/.config/fish/config.fish"
 set -l omf_init_path "$OMF_DATA_DIR/init.fish"
 
-# 1. Install OMF if not present
+# 1. Install OMF (Direct Clone Method)
 if not test -d "$OMF_DATA_DIR"
-    echo "Oh My Fish not found. Installing via official installer..."
+    echo "Oh My Fish not found. Bootstrapping via direct clone..."
     
-    # Download the official installer to a temp file
-    curl -L https://get.oh-my.fish > /tmp/install_omf.fish
-    
-    # Run the installer with --noninteractive and explicit paths
-    # This method is more reliable than manual cloning
-    echo "Running OMF Installer..."
-    fish /tmp/install_omf.fish --noninteractive --path="$OMF_DATA_DIR" --config="$OMF_CONFIG_DIR"
-    
-    # Clean up
-    rm /tmp/install_omf.fish
+    # 1a. Ensure git is available
+    if not command -q git
+        echo "Error: 'git' command not found. Cannot install Oh My Fish."
+        exit 1
+    end
+
+    # 1b. Create the config directory manually
+    if not test -d "$OMF_CONFIG_DIR"
+        mkdir -p "$OMF_CONFIG_DIR"
+        # Create a default theme file so OMF doesn't complain
+        echo "default" > "$OMF_CONFIG_DIR/theme"
+    end
+
+    # 1c. Clone the OMF repo DIRECTLY to the destination
+    # We use --depth 1 to make it faster and smaller
+    echo "Cloning OMF repository..."
+    git clone --depth 1 https://github.com/oh-my-fish/oh-my-fish "$OMF_DATA_DIR"
+
+    if test $status -eq 0
+        echo "OMF Core cloned successfully."
+    else
+        echo "Error: Git clone failed. Check your internet connection."
+        # Debug info just in case
+        exit 1
+    end
 else
     echo "OMF directory found. Skipping install."
 end
 
-# 2. Configure OMF (Only runs if init.fish exists)
+# 2. Configure OMF
 if test -f "$omf_init_path"
     echo "Initializing Oh My Fish from $omf_init_path..."
     source "$omf_init_path"
 
-    # 3. Check if 'omf' command is actually available now
+    # 3. Verify 'omf' command loaded
     if functions -q omf
         echo "OMF command loaded successfully."
 
@@ -77,13 +92,10 @@ if test -f "$omf_init_path"
         source "$config_file"
         echo "OMF configuration loaded."
     else
-        echo "⚠️  Error: 'omf' function not found after sourcing init.fish. Skipping theme setup."
+        echo "⚠️  Error: 'omf' function not found after sourcing init.fish."
     end
-
 else
-    echo "⚠️  OMF init file not found at $omf_init_path. Installation might have failed."
-    # List the directory to help debug if it happens again
-    ls -la "$HOME/.local/share"
+    echo "⚠️  OMF init file not found at $omf_init_path. Clone must have failed."
 end
 
 # --------------------------------------------------------
