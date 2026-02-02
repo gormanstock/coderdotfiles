@@ -62,15 +62,14 @@ else
     set -l config_updated false
     
     # Define ALL theme commands in a single array
-    set -l theme_commands (
-        "omf theme bobthefish"
-        "set -g theme_nerd_fonts yes"
-        "set -g theme_color_scheme nord"
-        "set -g theme_show_project_parent no"
-        "set -g theme_display_user no"  
-        "set -g theme_display_hostname no"
+    set -l theme_commands \
+        "omf theme bobthefish" \
+        "set -g theme_nerd_fonts yes" \
+        "set -g theme_color_scheme nord" \
+        "set -g theme_show_project_parent no" \
+        "set -g theme_display_user no"   \
+        "set -g theme_display_hostname no" \
         "set -g theme_display_ruby no"
-    )
     
     # Loop through the list of commands
     for command_to_add in $theme_commands
