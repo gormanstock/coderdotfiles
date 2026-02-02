@@ -1,6 +1,8 @@
 # This script is designed for single-run execution via:
 # curl -sS -o /tmp/remote_config.fish YOUR_RAW_FISH_CONFIG_URL
 # source /tmp/remote_config.fish
+# Capture the argument passed from install.sh (the repo path)
+set -l DOTFILES_REPO_PATH $argv[1]
 
 echo "--- Starting Remote Fish Configuration Setup ---"
 echo ""
@@ -145,26 +147,32 @@ else
     end
 end
 
-# --- NEW: Download Lazygit Configuration ---
+# --------------------------------------------------------
+# ⚙️ Lazygit Config (Updated for Local Repo)
+# --------------------------------------------------------
 echo "Updating Lazygit configuration..."
 
 set -l lazygit_config_dir "$HOME/.config/lazygit"
-set -l lazygit_config_file "$lazygit_config_dir/config.yml"
-set -l lazygit_raw_url "https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/lazygit_config.yml"
+set -l lazygit_target_file "$lazygit_config_dir/config.yml"
+set -l lazygit_source_file "lazygit_config.yml"
 
 # Ensure config directory exists
 if not test -d "$lazygit_config_dir"
     mkdir -p "$lazygit_config_dir"
 end
 
-# Download the config file
-curl -sL -o "$lazygit_config_file" "$lazygit_raw_url"
+# Check if we are running from the cloned repo (Local Mode)
+if test -n "$DOTFILES_REPO_PATH"; and test -f "$DOTFILES_REPO_PATH/$lazygit_source_file"
+    echo "🔗 Symlinking local Lazygit config..."
+    ln -sf "$DOTFILES_REPO_PATH/$lazygit_source_file" "$lazygit_target_file"
 
-if test $status -eq 0
-    echo "Lazygit config successfully updated at $lazygit_config_file"
+# Fallback: If running via curl (Remote Mode), download the file
 else
-    echo "Error: Failed to download Lazygit config."
+    echo "☁️ Downloading Lazygit config from GitHub..."
+    curl -sL -o "$lazygit_target_file" "https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/lazygit_config.yml"
 end
+
+echo "Lazygit config updated."
 
 # --------------------------------------------------------
 # 🛠️ Fish Alias & Git Configuration
