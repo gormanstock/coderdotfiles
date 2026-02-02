@@ -18,29 +18,20 @@ set -l omf_init_path "$OMF_DATA_DIR/init.fish"
 
 # 1. Install OMF if not present
 if not test -d "$OMF_DATA_DIR"
-    echo "Oh My Fish not found. Installing..."
+    echo "Oh My Fish not found. Installing via official installer..."
     
-    if command -q git
-        set -l temp_omf_dir "/tmp/oh-my-fish-temp"
-        set -l omf_install_bin "$temp_omf_dir/bin/install"
-
-        echo "Cloning OMF repository to $temp_omf_dir..."
-        git clone https://github.com/oh-my-fish/oh-my-fish $temp_omf_dir 2>/dev/null
-
-        if test -d $temp_omf_dir
-            echo "Running OMF install script..."
-            
-            # FIXED: Explicitly tell installer where to put files using --path and --config
-            # This guarantees that $OMF_DATA_DIR matches where the files actually go.
-            fish $omf_install_bin --path="$OMF_DATA_DIR" --config="$OMF_CONFIG_DIR" --noninteractive --yes
-            
-            rm -rf $temp_omf_dir
-        else
-            echo "Error: Failed to clone the OMF repository. Skipping OMF setup."
-        end
-    else
-        echo "Error: 'git' command not found. Skipping OMF setup."
-    end
+    # Download the official installer to a temp file
+    curl -L https://get.oh-my.fish > /tmp/install_omf.fish
+    
+    # Run the installer with --noninteractive and explicit paths
+    # This method is more reliable than manual cloning
+    echo "Running OMF Installer..."
+    fish /tmp/install_omf.fish --noninteractive --path="$OMF_DATA_DIR" --config="$OMF_CONFIG_DIR"
+    
+    # Clean up
+    rm /tmp/install_omf.fish
+else
+    echo "OMF directory found. Skipping install."
 end
 
 # 2. Configure OMF (Only runs if init.fish exists)
@@ -59,7 +50,7 @@ if test -f "$omf_init_path"
         echo "Writing theme activation commands to $config_file..."
         set -l config_updated false
 
-        # Define theme variables (Removed 'omf theme bobthefish' to prevent loops)
+        # Define theme variables
         set -l theme_commands \
             "set -g theme_nerd_fonts yes" \
             "set -g theme_color_scheme nord" \
@@ -91,6 +82,8 @@ if test -f "$omf_init_path"
 
 else
     echo "⚠️  OMF init file not found at $omf_init_path. Installation might have failed."
+    # List the directory to help debug if it happens again
+    ls -la "$HOME/.local/share"
 end
 
 # --------------------------------------------------------
