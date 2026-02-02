@@ -54,7 +54,6 @@ if test -f "$omf_init_path"
 
     # Define ALL theme commands in a single array
     set -l theme_commands \
-        "omf theme bobthefish" \
         "set -g theme_nerd_fonts yes" \
         "set -g theme_color_scheme nord" \
         "set -g theme_show_project_parent no" \
