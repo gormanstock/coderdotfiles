@@ -309,5 +309,88 @@ if set -q config_updated
     echo "Configuration reloaded."
 end
 
+# --------------------------------------------------------
+# 🤖 Workspace Agents Configuration
+# --------------------------------------------------------
+
+echo "--- Workspace Agents Setup ---"
+
+set -l workspace_base_dir "/home/coder/workspace"
+
+# List of workspace directories to set up (skip non-workspace dirs)
+set -l workspace_dirs beeline cetus coyote dsl falco falco-web-lite gemini lyra pdf-render-service platform
+
+# Function to setup agents for all workspaces
+function setup_all_workspace_agents
+    echo "Setting up AGENTS.md files for all workspaces..."
+    
+    for workspace in $workspace_dirs
+        set -l workspace_path "$workspace_base_dir/$workspace"
+        set -l target_file "$workspace_path/AGENTS.md" 
+        set -l vscode_dir "$workspace_path/.vscode"
+        set -l vscode_settings "$vscode_dir/settings.json"
+        
+        # Skip if workspace directory doesn't exist
+        if not test -d "$workspace_path"
+            echo "⏭️  Skipping $workspace (directory not found)"
+            continue
+        end
+        
+        echo "🔧 Setting up agents for: $workspace"
+        
+        # Check for local agents first (if running from cloned dotfiles)
+        if test -n "$DOTFILES_REPO_PATH"; and test -f "$DOTFILES_REPO_PATH/agents/$workspace.md"
+            echo "  🔗 Linking local agent config"
+            ln -sf "$DOTFILES_REPO_PATH/agents/$workspace.md" "$target_file"
+            echo "  ✅ Local agent config linked: $target_file"
+            
+        else
+            # Remote mode: fetch from GitHub 
+            set -l base_url "https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/agents"
+            set -l agent_url "$base_url/$workspace.md"
+            set -l default_url "$base_url/default.md"
+            
+            # Try workspace-specific config first
+            if curl -sL --fail -o "$target_file" "$agent_url" 2>/dev/null
+                echo "  ✅ Workspace-specific agent config downloaded: $target_file"
+            else if curl -sL --fail -o "$target_file" "$default_url" 2>/dev/null
+                echo "  📄 Default agent config downloaded: $target_file"
+            else
+                echo "  ⚠️  No agent configuration available for $workspace"
+                continue  # Skip VS Code settings if no AGENTS.md was created
+            end
+        end
+        
+        # Create .vscode directory if it doesn't exist
+        if not test -d "$vscode_dir"
+            mkdir -p "$vscode_dir"
+        end
+        
+        # Create or update VS Code settings to include GitHub Copilot instructions
+        echo "  🔧 Setting up VS Code workspace settings"
+        
+        # Use template file for VS Code settings
+        if test -n "$DOTFILES_REPO_PATH"; and test -f "$DOTFILES_REPO_PATH/vscode-settings-template.json"
+            # Local mode: copy template from dotfiles repo
+            cp "$DOTFILES_REPO_PATH/vscode-settings-template.json" "$vscode_settings"
+        else
+            # Remote mode: download template from GitHub
+            curl -sL --fail -o "$vscode_settings" "https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/vscode-settings-template.json" 2>/dev/null
+        end
+        
+        echo "  ⚙️  VS Code settings created: $vscode_settings"
+    end
+end
+
+# Set up persistent alias for manual agent refresh
+set -l agents_alias_definition "alias reload-agents setup_all_workspace_agents"
+if not grep -qF "$agents_alias_definition" "$config_file"
+    echo $agents_alias_definition >> "$config_file"
+    echo "Agent reload alias added to config.fish"
+end
+
+# Auto-setup agents for all workspaces
+setup_all_workspace_agents
+
 echo ""
 echo "🎉 Setup run complete!"
