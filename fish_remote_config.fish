@@ -369,16 +369,15 @@ function setup_all_workspace_agents
         # Create or update VS Code settings to include GitHub Copilot instructions
         echo "  🔧 Setting up VS Code workspace settings"
         
-        # Create the settings.json content
-        set -l settings_content '{
-  "github.copilot.chat.localeOverride": "en",
-  "github.copilot.chat.instructions": {
-    "workspace": "Always read and follow the project-specific guidelines in AGENTS.md at the workspace root before providing assistance with this codebase. The AGENTS.md file contains critical context about the project structure, development patterns, testing procedures, and workflow guidelines that must be followed."
-  }
-}'
+        # Use template file for VS Code settings
+        if test -n "$DOTFILES_REPO_PATH"; and test -f "$DOTFILES_REPO_PATH/vscode-settings-template.json"
+            # Local mode: copy template from dotfiles repo
+            cp "$DOTFILES_REPO_PATH/vscode-settings-template.json" "$vscode_settings"
+        else
+            # Remote mode: download template from GitHub
+            curl -sL --fail -o "$vscode_settings" "https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/vscode-settings-template.json" 2>/dev/null
+        end
         
-        # Write the settings file
-        echo "$settings_content" > "$vscode_settings"
         echo "  ⚙️  VS Code settings created: $vscode_settings"
     end
 end

@@ -1,0 +1,6 @@
+{
+  "github.copilot.chat.localeOverride": "en",
+  "github.copilot.chat.instructions": {
+    "workspace": "Always read and follow the project-specific guidelines in AGENTS.md at the workspace root before providing assistance with this codebase. The AGENTS.md file contains critical context about the project structure, development patterns, testing procedures, and workflow guidelines that must be followed."
+  }
+}
