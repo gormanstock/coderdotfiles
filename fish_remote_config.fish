@@ -7,42 +7,7 @@ set -l DOTFILES_REPO_PATH $argv[1]
 echo "--- Starting Remote Fish Configuration Setup ---"
 echo ""
 
-# 🐠 Oh My Fish (OMF) Setup
 # --------------------------------------------------------
-
-# Define the expected OMF data directory explicitly
-set -l OMF_DATA_DIR "$HOME/.local/share/omf"
-set -l OMF_CONFIG_DIR "$HOME/.config/omf"
-set -l config_file "$HOME/.config/fish/config.fish"
-set -l omf_init_path "$OMF_DATA_DIR/init.fish"
-
-# 1. Install OMF (Direct Clone Method)
-if not test -d "$OMF_DATA_DIR"
-    echo "Oh My Fish not found. Bootstrapping via direct clone..."
-    
-    if not command -q git
-        echo "Error: 'git' command not found. Cannot install Oh My Fish."
-        exit 1
-    end
-
-    if not test -d "$OMF_CONFIG_DIR"
-        mkdir -p "$OMF_CONFIG_DIR"
-        echo "default" > "$OMF_CONFIG_DIR/theme"
-    end
-
-    echo "Cloning OMF repository..."
-    git clone --depth 1 https://github.com/oh-my-fish/oh-my-fish "$OMF_DATA_DIR"
-
-    if test $status -eq 0
-        echo "OMF Core cloned successfully."
-    else
-        echo "Error: Git clone failed."
-        exit 1
-    end
-else
-    echo "OMF directory found. Skipping install."
-end
-
 # 🐠 Oh My Fish (OMF) Setup
 # --------------------------------------------------------
 
@@ -151,6 +116,29 @@ else
 end
 
 # --------------------------------------------------------
+# 📦 Additional Packages Setup
+# --------------------------------------------------------
+
+echo "--- Installing Additional Packages ---"
+
+# NOTE: Adjust this block if you use Homebrew (`brew install`) or need specific repos for tools like eza/glow.
+# Assuming standard Ubuntu/Debian apt usage for a Coder workspace:
+set -l packages_to_install glow ranger zoxide btop chafa eza
+# Note: 'llmfit', 'models', and 'csvlens' might require pip, cargo, or custom binary curls depending on their source.
+# Appending them here as a best-effort if they exist in your package manager:
+set -a packages_to_install llmfit models csvlens
+
+echo "Attempting to install: $packages_to_install"
+if command -q apt-get
+    sudo apt-get update
+    sudo apt-get install -y $packages_to_install
+else if command -q brew
+    brew install $packages_to_install
+else
+    echo "⚠️ No standard package manager (apt/brew) found. Please install packages manually."
+end
+
+# --------------------------------------------------------
 # 💻 Lazygit Setup
 # --------------------------------------------------------
 
@@ -231,26 +219,44 @@ end
 echo "Lazygit config updated."
 
 # --------------------------------------------------------
-# 🛠️ Fish Alias & Git Configuration
+# 🛠️ Fish Aliases, Git Config & Welcome Message
 # --------------------------------------------------------
 
-echo "--- Fish Alias & Git Configuration Setup ---"
+echo "--- Fish Alias & Environment Setup ---"
 
-# 1. Add the persistent fish alias
-echo "Setting persistent fish alias: gitcommands -> 'git config --list --show-origin'"
+# 1. Add persistent fish aliases and tools
+echo "Writing aliases to config.fish..."
 
-# FIXED: Direct config.fish write for alias persistence
-set -l alias_definition "alias gitcommands='git config --list --show-origin'"
+# Create a block of aliases and configurations to append
+set -l fish_append_block "\
+# --- User Aliases ---
+alias gitcommands='git config --list --show-origin'
+alias lg='lazygit'
+alias ls='eza'
 
-# Check if the alias already exists in the config file before appending
-if not grep -qF "$alias_definition" "$config_file" 
-    echo $alias_definition >> "$config_file"
-    echo "Alias added to config.fish for persistence."
-    set config_updated true
-else
-    echo "Alias already exists in config.fish."
+# --- Zoxide Setup ---
+if command -v zoxide > /dev/null
+    zoxide init fish --cmd cd | source
 end
 
+# --- Fish Greeting ---
+function fish_greeting
+    set_color cyan
+    echo '🚀 Welcome to your Workspace!'
+    set_color yellow
+    echo '🛠️  Available Tools: lazygit (lg), glow, llmfit, models, ranger, zoxide (cd), btop, chafa, csvlens, eza (ls)'
+    set_color normal
+end
+"
+
+# Check if we've already appended this block to avoid duplicates on re-runs
+if not grep -qF "alias lg='lazygit'" "$config_file"
+    echo "$fish_append_block" >> "$config_file"
+    echo "Aliases and welcome message added."
+    set config_updated true
+else
+    echo "Aliases already exist in config.fish."
+end
 
 # 2. Apply all Git configuration settings using `git config --global`
 
