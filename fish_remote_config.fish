@@ -8,84 +8,56 @@ echo "--- Starting Remote Fish Configuration Setup ---"
 echo ""
 
 # --------------------------------------------------------
+# 🔧 Global Path Setup
+# --------------------------------------------------------
+# Ensure ~/.local/bin is permanently in the PATH right away
+set -l local_bin "$HOME/.local/bin"
+if not test -d "$local_bin"
+    mkdir -p "$local_bin"
+end
+fish_add_path "$local_bin"
+
+# If Homebrew is installed but not in PATH, add it
+if test -f /home/linuxbrew/.linuxbrew/bin/brew
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+end
+
+# --------------------------------------------------------
 # 🐠 Oh My Fish (OMF) Setup
 # --------------------------------------------------------
-
-# Define the expected OMF data directory explicitly
 set -l OMF_DATA_DIR "$HOME/.local/share/omf"
 set -l OMF_CONFIG_DIR "$HOME/.config/omf"
 set -l config_file "$HOME/.config/fish/config.fish"
 set -l omf_init_path "$OMF_DATA_DIR/init.fish"
 
-# 1. Install OMF (Direct Clone Method)
 if not test -d "$OMF_DATA_DIR"
     echo "Oh My Fish not found. Bootstrapping via direct clone..."
-    
-    if not command -q git
-        echo "Error: 'git' command not found. Cannot install Oh My Fish."
-        exit 1
-    end
+    if not command -q git; echo "Error: 'git' command not found."; exit 1; end
 
-    if not test -d "$OMF_CONFIG_DIR"
-        mkdir -p "$OMF_CONFIG_DIR"
-        echo "default" > "$OMF_CONFIG_DIR/theme"
-    end
-
-    echo "Cloning OMF repository..."
+    mkdir -p "$OMF_CONFIG_DIR"
+    echo "default" > "$OMF_CONFIG_DIR/theme"
     git clone --depth 1 https://github.com/oh-my-fish/oh-my-fish "$OMF_DATA_DIR"
-
-    if test $status -eq 0
-        echo "OMF Core cloned successfully."
-    else
-        echo "Error: Git clone failed."
-        exit 1
-    end
 else
     echo "OMF directory found. Skipping install."
 end
 
-# 2. Configure OMF
 if test -f "$omf_init_path"
-    echo "Initializing Oh My Fish from $omf_init_path..."
-
-    # Set OMF paths as Global variables so the script sees them right now
     set -gx OMF_PATH "$OMF_DATA_DIR"
     set -gx OMF_CONFIG "$OMF_CONFIG_DIR"
-
-    # Manually source the library that defines 'require' (For this script's session)
-    if test -f "$OMF_PATH/lib/require.fish"
-        source "$OMF_PATH/lib/require.fish"
-    end
-
-    # Source the main init file
+    if test -f "$OMF_PATH/lib/require.fish"; source "$OMF_PATH/lib/require.fish"; end
     source "$omf_init_path"
 
-    # 3. Verify 'omf' command loaded
     if functions -q omf
-        echo "OMF command loaded successfully."
-
-        # Install Theme
-        echo "Installing 'bobthefish' theme..."
         omf install bobthefish 2>/dev/null
 
-        # --- CRITICAL FIX: Ensure OMF loads correctly in future sessions ---
-        # We must define OMF_PATH in config.fish BEFORE sourcing init.fish
         if not grep -q "set -gx OMF_PATH" "$config_file"
-            echo "Adding OMF startup code to config.fish..."
-            
-            # We append the robust startup block
             echo "" >> "$config_file"
             echo "# Path to Oh My Fish install." >> "$config_file"
             echo "set -gx OMF_PATH \"$OMF_DATA_DIR\"" >> "$config_file"
             echo "set -gx OMF_CONFIG \"$OMF_CONFIG_DIR\"" >> "$config_file"
             echo "source \"\$OMF_PATH/init.fish\"" >> "$config_file"
         end
-        # ---------------------------------------------------------
 
-        echo "Writing theme activation commands to $config_file..."
-        set -l config_updated false
-
-        # Define theme variables
         set -l theme_commands \
             "set -g theme_nerd_fonts yes" \
             "set -g theme_color_scheme nord" \
@@ -97,244 +69,131 @@ if test -f "$omf_init_path"
         for command_to_add in $theme_commands
             if not grep -qF "$command_to_add" "$config_file"
                 echo "$command_to_add" >> "$config_file"
-                set config_updated true
             end
         end
-
-        if $config_updated
-            echo "Theme configurations added to config.fish."
-        end
-        
-        # Source config.fish to apply changes
-        source "$config_file"
-        echo "OMF configuration loaded."
-    else
-        echo "⚠️  Error: 'omf' function not found after sourcing init.fish."
     end
-else
-    echo "⚠️  OMF init file not found at $omf_init_path."
 end
 
 # --------------------------------------------------------
 # 📦 Additional Packages Setup
 # --------------------------------------------------------
-
 echo "--- Installing Additional Packages ---"
 
-# 1. Install standard APT packages
-echo "Installing standard repository packages..."
 if command -q apt-get
     sudo apt-get update
+    # 1. Standard APT packages
     sudo apt-get install -y ranger zoxide btop chafa
+
+    # 2. Glow (via Charmbracelet APT repo)
+    if not command -q glow
+        sudo mkdir -p /etc/apt/keyrings
+        curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/charm.gpg
+        echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+        sudo apt-get update; and sudo apt-get install -y glow
+    end
+
+    # 3. Eza (via official APT repo)
+    if not command -q eza
+        sudo mkdir -p /etc/apt/keyrings
+        curl -fsSL https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor --yes -o /etc/apt/keyrings/gierens.gpg
+        echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://apt.fury.io/eza/ /" | sudo tee /etc/apt/sources.list.d/gierens.list
+        sudo apt-get update; and sudo apt-get install -y eza
+    end
 end
 
-# 2. Install Glow (via Charmbracelet APT repo)
-echo "Installing Glow..."
-if not command -q glow
-    sudo mkdir -p /etc/apt/keyrings
-    curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/charm.gpg
-    echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
-    sudo apt-get update
-    sudo apt-get install -y glow
-else
-    echo "Glow already installed."
-end
-
-# 3. Install Eza (via official APT repo)
-echo "Installing Eza..."
-if not command -q eza
-    sudo mkdir -p /etc/apt/keyrings
-    curl -fsSL https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor --yes -o /etc/apt/keyrings/gierens.gpg
-    echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://apt.fury.io/eza/ /" | sudo tee /etc/apt/sources.list.d/gierens.list
-    sudo apt-get update
-    sudo apt-get install -y eza
-else
-    echo "Eza already installed."
-end
-
-# 4. Install CSVLens (Direct Binary Download)
-echo "Installing CSVLens..."
+# 4. CSVLens (Pre-compiled Binary)
 if not command -q csvlens
-    set -l local_bin "$HOME/.local/bin"
-    set -l CSVLENS_URL (curl -s https://api.github.com/repos/YS-L/csvlens/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.xz" | cut -d '"' -f 4)
-    
+    echo "Installing CSVLens..."
+    set -l CSVLENS_URL (curl -s https://api.github.com/repos/YS-L/csvlens/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.xz" | head -n 1 | cut -d '"' -f 4)
     if test -n "$CSVLENS_URL"
         curl -sL "$CSVLENS_URL" -o /tmp/csvlens.tar.xz
         tar -xf /tmp/csvlens.tar.xz -C /tmp
-        # Find the extracted binary and move it to ~/.local/bin
         find /tmp -name "csvlens" -type f -executable -exec mv {} "$local_bin/" \;
         rm -rf /tmp/csvlens*
-        echo "CSVLens installed to $local_bin"
-    else
-        echo "⚠️ Failed to find CSVLens download URL."
     end
-else
-    echo "CSVLens already installed."
 end
 
-# 5. Install llmfit (Custom Script)
-echo "Installing llmfit..."
+# 5. llmfit (Custom Script)
 if not command -q llmfit
+    echo "Installing llmfit..."
     curl -fsSL https://llmfit.axjns.dev/install.sh | sh
-else
-    echo "llmfit already installed."
 end
 
-# 6. Install models (via Homebrew)
-echo "Installing models..."
+# 6. models (via Homebrew)
 if not command -q models
     if command -q brew
+        echo "Installing models via Homebrew..."
         brew install arimxyer/tap/models
     else
-        echo "⚠️  Homebrew is required to install 'models' but 'brew' command was not found."
-        echo "Please install Linuxbrew or install models manually."
+        echo "⚠️ Homebrew not found. Skipping 'models'."
     end
-else
-    echo "models already installed."
 end
 
 # --------------------------------------------------------
 # 💻 Lazygit Setup
 # --------------------------------------------------------
-
 echo "--- Lazygit Setup ---"
-
-# 1. Check if lazygit is already installed and runnable
-if command -q lazygit
-    echo "Lazygit is already installed."
-else
-    echo "Lazygit not found. Attempting user-local installation..."
-    
-    # Ensure the local bin directory exists and is in the PATH
-    set -l local_bin "$HOME/.local/bin"
-    if not test -d "$local_bin"
-        mkdir -p "$local_bin"
-    end
-    # Ensure this path is in the user's permanent path list
-    if not contains "$local_bin" $fish_user_paths
-        set -U fish_user_paths $fish_user_paths "$local_bin"
-        echo "Added $local_bin to your PATH for persistence."
-    end
-
-    echo "Fetching latest Lazygit version..."
-    set LAZYGIT_VERSION (curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | \grep -oP '"tag_name": "v\K[^"]*')
-    
-    if test -z "$LAZYGIT_VERSION"
-        echo "Error: Could not determine latest Lazygit version. Installation aborted."
-    else
-        echo "Found version: v$LAZYGIT_VERSION"
+if not command -q lazygit
+    set -l LAZYGIT_VERSION (curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | \grep -oP '"tag_name": "v\K[^"]*')
+    if test -n "$LAZYGIT_VERSION"
         set -l LAZYGIT_DOWNLOAD_URL "https://github.com/jesseduffield/lazygit/releases/download/v$LAZYGIT_VERSION/lazygit_"$LAZYGIT_VERSION"_Linux_x86_64.tar.gz"
-        
-        # 2. Download the tarball to a temporary location using -o
-        echo "Downloading Lazygit..."
         curl -Lo /tmp/lazygit.tar.gz "$LAZYGIT_DOWNLOAD_URL"
-        
-        # 3. Extract the binary
-        echo "Extracting binary..."
         tar -xzf /tmp/lazygit.tar.gz -C /tmp
-        
-        # 4. Install the binary to the local bin path
-        if test -f /tmp/lazygit
-            install /tmp/lazygit "$local_bin"
-            echo "Lazygit installed successfully to $local_bin/lazygit"
-        else
-            echo "Error: Lazygit binary not found after extraction."
-        end
-
-        # 5. Clean up
+        install /tmp/lazygit "$local_bin"
         rm /tmp/lazygit.tar.gz /tmp/lazygit 2>/dev/null
     end
 end
 
-# --------------------------------------------------------
-# ⚙️ Lazygit Config (Updated for Local Repo)
-# --------------------------------------------------------
-echo "Updating Lazygit configuration..."
-
+# Lazygit Config Symlink
 set -l lazygit_config_dir "$HOME/.config/lazygit"
 set -l lazygit_target_file "$lazygit_config_dir/config.yml"
 set -l lazygit_source_file "lazygit_config.yml"
-
-# Ensure config directory exists
-if not test -d "$lazygit_config_dir"
-    mkdir -p "$lazygit_config_dir"
-end
-
-# Check if we are running from the cloned repo (Local Mode)
+mkdir -p "$lazygit_config_dir"
 if test -n "$DOTFILES_REPO_PATH"; and test -f "$DOTFILES_REPO_PATH/$lazygit_source_file"
-    echo "🔗 Symlinking local Lazygit config..."
     ln -sf "$DOTFILES_REPO_PATH/$lazygit_source_file" "$lazygit_target_file"
-
-# Fallback: If running via curl (Remote Mode), download the file
 else
-    echo "☁️ Downloading Lazygit config from GitHub..."
     curl -sL -o "$lazygit_target_file" "https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/lazygit_config.yml"
 end
 
-echo "Lazygit config updated."
-
 # --------------------------------------------------------
-# 🛠️ Fish Aliases, Git Config & Welcome Message
+# 🛠️ Fish Aliases, Zoxide & Environment Setup (conf.d method)
 # --------------------------------------------------------
+echo "--- Setting up clean Aliases & Zoxide ---"
+mkdir -p "$HOME/.config/fish/conf.d"
 
-echo "--- Fish Alias & Environment Setup ---"
+# 1. Zoxide Initialization (Prevents the Infinite Loop)
+echo "if command -v zoxide > /dev/null; zoxide init fish --cmd cd | source; end" > "$HOME/.config/fish/conf.d/zoxide_init.fish"
 
-# 1. Add persistent fish aliases and tools
-echo "Writing aliases to config.fish..."
-
-# Create a block of aliases and configurations to append
-set -l fish_append_block "\
-# --- User Aliases ---
-alias gitcommands='git config --list --show-origin'
-alias lg='lazygit'
-alias ls='eza'
-
-# --- Zoxide Setup ---
-if command -v zoxide > /dev/null
-    zoxide init fish --cmd cd | source
-end
-
-# --- Fish Greeting ---
+# 2. Aliases and Welcome Message
+set -l user_env_file "$HOME/.config/fish/conf.d/user_env.fish"
+echo "alias gitcommands='git config --list --show-origin'" > "$user_env_file"
+echo "alias lg='lazygit'" >> "$user_env_file"
+echo "alias ls='eza'" >> "$user_env_file"
+echo "
 function fish_greeting
     set_color cyan
     echo '🚀 Welcome to your Workspace!'
     set_color yellow
     echo '🛠️  Available Tools: lazygit (lg), glow, llmfit, models, ranger, zoxide (cd), btop, chafa, csvlens, eza (ls)'
     set_color normal
-end
-"
+end" >> "$user_env_file"
 
-# Check if we've already appended this block to avoid duplicates on re-runs
-if not grep -qF "alias lg='lazygit'" "$config_file"
-    echo "$fish_append_block" >> "$config_file"
-    echo "Aliases and welcome message added."
-    set config_updated true
-else
-    echo "Aliases already exist in config.fish."
-end
-
-# 2. Apply all Git configuration settings using `git config --global`
-
-# Core settings
+# --------------------------------------------------------
+# 🔧 Git Configuration
+# --------------------------------------------------------
 git config --global core.editor 'code --wait'
 git config --global pull.rebase false 
 git config --global merge.conflictstyle diff3
 git config --global rebase.instructionFormat '"(%an <%ae>) %s"'
-
-# Credential helper
 git config --global credential.helper '/usr/bin/gp credential-helper'
-
-# LFS filter
 git config --global filter.lfs.clean 'git-lfs clean -- %f'
 git config --global filter.lfs.smudge 'git-lfs smudge -- %f'
 git config --global filter.lfs.process 'git-lfs filter-process'
 git config --global filter.lfs.required true
-
-# Push and Help
 git config --global push.default simple
 git config --global help.autocorrect 20
 
-# Aliases
+# Git Aliases
 git config --global alias.fixup '!git add . && git commit --fixup=${1:-$(git rev-parse HEAD)} && GIT_EDITOR=true git rebase --interactive --autosquash ${1:-$(git rev-parse HEAD~2)}~1'
 git config --global alias.fileschanged 'diff HEAD^ HEAD --name-only'
 git config --global alias.fc 'diff --name-only HEAD~1 HEAD'
@@ -361,29 +220,10 @@ git config --global alias.fcs 'diff --name-only'
 git config --global alias.us 'submodule update --recursive --remote'
 git config --global alias.updatesubmodules 'submodule update --recursive --remote'
 
-echo "All Git configurations applied to $HOME/.gitconfig."
-
-# 3. Source the config file if any change was made (resourcing the config.fish file)
-if set -q config_updated
-    echo "Sourcing updated config.fish to apply changes to the current session."
-    source "$config_file"
-    echo "Configuration reloaded."
-end
-
 # --------------------------------------------------------
 # 🤖 Workspace Agents Configuration
 # --------------------------------------------------------
-
-echo "--- Workspace Agents Alias Setup ---"
-
-# Add deploy_agents alias to config.fish for manual execution
-set -l agents_alias_definition "alias deploy_agents 'for workspace in beeline cetus coyote dsl falco falco-web-lite gemini lyra pdf-render-service platform; set target /home/coder/workspace/\$workspace/AGENTS.md; set vscode_dir /home/coder/workspace/\$workspace/.vscode; if test -d /home/coder/workspace/\$workspace; echo \"Setting up \$workspace...\"; curl -sL --fail -o \$target https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/agents/\$workspace.md 2>/dev/null; or curl -sL --fail -o \$target https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/agents/default.md 2>/dev/null; mkdir -p \$vscode_dir; curl -sL --fail -o \$vscode_dir/settings.json https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/vscode-settings-template.json 2>/dev/null; end; end; echo \"✅ Agent configs deployed to all workspaces\"'"
-
-if not grep -qF "alias deploy_agents" "$config_file"
-    echo $agents_alias_definition >> "$config_file"
-    echo "deploy_agents alias added to config.fish"
-    echo "Run 'deploy_agents' in your terminal to set up AGENTS.md files for all workspaces."
-end
+echo "alias deploy_agents 'for workspace in beeline cetus coyote dsl falco falco-web-lite gemini lyra pdf-render-service platform; set target /home/coder/workspace/\$workspace/AGENTS.md; set vscode_dir /home/coder/workspace/\$workspace/.vscode; if test -d /home/coder/workspace/\$workspace; echo \"Setting up \$workspace...\"; curl -sL --fail -o \$target https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/agents/\$workspace.md 2>/dev/null; or curl -sL --fail -o \$target https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/agents/default.md 2>/dev/null; mkdir -p \$vscode_dir; curl -sL --fail -o \$vscode_dir/settings.json https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/vscode-settings-template.json 2>/dev/null; end; end; echo \"✅ Agent configs deployed to all workspaces\"'" >> "$user_env_file"
 
 echo ""
-echo "🎉 Setup run complete!"
+echo "🎉 Setup run complete! Type 'exec fish' to apply all changes instantly."
