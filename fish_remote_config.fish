@@ -10,14 +10,14 @@ echo ""
 # --------------------------------------------------------
 # 🔧 Global Path Setup
 # --------------------------------------------------------
-# Ensure ~/.local/bin is permanently in the PATH right away
 set -l local_bin "$HOME/.local/bin"
 if not test -d "$local_bin"
     mkdir -p "$local_bin"
 end
+# Instantly add local bin to PATH for this session and future ones
 fish_add_path "$local_bin"
 
-# If Homebrew is installed but not in PATH, add it
+# If Homebrew is installed but not in PATH, add it cleanly (Fish syntax)
 if test -f /home/linuxbrew/.linuxbrew/bin/brew
     eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv)
 end
@@ -81,11 +81,12 @@ echo "--- Installing Additional Packages ---"
 
 if command -q apt-get
     sudo apt-get update
-    # 1. Standard APT packages
-    sudo apt-get install -y ranger zoxide btop chafa
+    # 1. Standard APT packages (Zoxide removed to avoid buggy v0.4.3)
+    sudo apt-get install -y ranger btop chafa
 
     # 2. Glow (via Charmbracelet APT repo)
     if not command -q glow
+        echo "Installing Glow..."
         sudo mkdir -p /etc/apt/keyrings
         curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/charm.gpg
         echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
@@ -93,7 +94,13 @@ if command -q apt-get
     end
 end
 
-# 3. Eza (Direct Binary Download)
+# 3. Zoxide (Latest version via official script to prevent _z_cd loop)
+if not command -q zoxide
+    echo "Installing latest Zoxide..."
+    curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+end
+
+# 4. Eza (Direct Binary Download to bypass broken APT mirrors)
 if not command -q eza
     echo "Installing Eza directly..."
     set -l EZA_URL (curl -s https://api.github.com/repos/eza-community/eza/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.gz" | head -n 1 | cut -d '"' -f 4)
@@ -105,7 +112,7 @@ if not command -q eza
     end
 end
 
-# 4. CSVLens (Pre-compiled Binary)
+# 5. CSVLens (Pre-compiled Binary)
 if not command -q csvlens
     echo "Installing CSVLens..."
     set -l CSVLENS_URL (curl -s https://api.github.com/repos/YS-L/csvlens/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.xz" | head -n 1 | cut -d '"' -f 4)
@@ -117,19 +124,26 @@ if not command -q csvlens
     end
 end
 
-# 5. llmfit (Custom Script)
+# 6. llmfit (Custom Script)
 if not command -q llmfit
     echo "Installing llmfit..."
     curl -fsSL https://llmfit.axjns.dev/install.sh | sh
 end
 
-# 6. models (via Homebrew)
+# 7. models (via Cargo Build from Source)
 if not command -q models
-    if command -q brew
-        echo "Installing models via Homebrew..."
-        brew install arimxyer/tap/models
+    if command -q cargo
+        echo "Installing models via Cargo from source..."
+        set -l tmp_models_dir (mktemp -d)
+        git clone --quiet https://github.com/arimxyer/models $tmp_models_dir
+        cd $tmp_models_dir
+        cargo build --release
+        install target/release/models "$local_bin/"
+        cd -
+        rm -rf $tmp_models_dir
+        echo "✅ 'models' installed."
     else
-        echo "⚠️ Homebrew not found. Skipping 'models'."
+        echo "⚠️ 'cargo' not found. Skipping 'models'."
     end
 end
 
@@ -165,7 +179,7 @@ end
 echo "--- Setting up clean Aliases & Zoxide ---"
 mkdir -p "$HOME/.config/fish/conf.d"
 
-# 1. Zoxide Initialization (Prevents the Infinite Loop)
+# 1. Zoxide Initialization (Ensures it loads exactly once)
 echo "if command -v zoxide > /dev/null; zoxide init fish --cmd cd | source; end" > "$HOME/.config/fish/conf.d/zoxide_init.fish"
 
 # 2. Aliases and Welcome Message
@@ -230,4 +244,4 @@ git config --global alias.updatesubmodules 'submodule update --recursive --remot
 echo "alias deploy_agents 'for workspace in beeline cetus coyote dsl falco falco-web-lite gemini lyra pdf-render-service platform; set target /home/coder/workspace/\$workspace/AGENTS.md; set vscode_dir /home/coder/workspace/\$workspace/.vscode; if test -d /home/coder/workspace/\$workspace; echo \"Setting up \$workspace...\"; curl -sL --fail -o \$target https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/agents/\$workspace.md 2>/dev/null; or curl -sL --fail -o \$target https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/agents/default.md 2>/dev/null; mkdir -p \$vscode_dir; curl -sL --fail -o \$vscode_dir/settings.json https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/vscode-settings-template.json 2>/dev/null; end; end; echo \"✅ Agent configs deployed to all workspaces\"'" >> "$user_env_file"
 
 echo ""
-echo "🎉 Setup run complete! Type 'exec fish' to apply all changes instantly."
+echo "🎉 Setup run complete!"
