@@ -121,21 +121,76 @@ end
 
 echo "--- Installing Additional Packages ---"
 
-# NOTE: Adjust this block if you use Homebrew (`brew install`) or need specific repos for tools like eza/glow.
-# Assuming standard Ubuntu/Debian apt usage for a Coder workspace:
-set -l packages_to_install glow ranger zoxide btop chafa eza
-# Note: 'llmfit', 'models', and 'csvlens' might require pip, cargo, or custom binary curls depending on their source.
-# Appending them here as a best-effort if they exist in your package manager:
-set -a packages_to_install llmfit models csvlens
-
-echo "Attempting to install: $packages_to_install"
+# 1. Install standard APT packages
+echo "Installing standard repository packages..."
 if command -q apt-get
     sudo apt-get update
-    sudo apt-get install -y $packages_to_install
-else if command -q brew
-    brew install $packages_to_install
+    sudo apt-get install -y ranger zoxide btop chafa
+end
+
+# 2. Install Glow (via Charmbracelet APT repo)
+echo "Installing Glow..."
+if not command -q glow
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/charm.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+    sudo apt-get update
+    sudo apt-get install -y glow
 else
-    echo "⚠️ No standard package manager (apt/brew) found. Please install packages manually."
+    echo "Glow already installed."
+end
+
+# 3. Install Eza (via official APT repo)
+echo "Installing Eza..."
+if not command -q eza
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor --yes -o /etc/apt/keyrings/gierens.gpg
+    echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://apt.fury.io/eza/ /" | sudo tee /etc/apt/sources.list.d/gierens.list
+    sudo apt-get update
+    sudo apt-get install -y eza
+else
+    echo "Eza already installed."
+end
+
+# 4. Install CSVLens (Direct Binary Download)
+echo "Installing CSVLens..."
+if not command -q csvlens
+    set -l local_bin "$HOME/.local/bin"
+    set -l CSVLENS_URL (curl -s https://api.github.com/repos/YS-L/csvlens/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.xz" | cut -d '"' -f 4)
+    
+    if test -n "$CSVLENS_URL"
+        curl -sL "$CSVLENS_URL" -o /tmp/csvlens.tar.xz
+        tar -xf /tmp/csvlens.tar.xz -C /tmp
+        # Find the extracted binary and move it to ~/.local/bin
+        find /tmp -name "csvlens" -type f -executable -exec mv {} "$local_bin/" \;
+        rm -rf /tmp/csvlens*
+        echo "CSVLens installed to $local_bin"
+    else
+        echo "⚠️ Failed to find CSVLens download URL."
+    end
+else
+    echo "CSVLens already installed."
+end
+
+# 5. Install llmfit (Custom Script)
+echo "Installing llmfit..."
+if not command -q llmfit
+    curl -fsSL https://llmfit.axjns.dev/install.sh | sh
+else
+    echo "llmfit already installed."
+end
+
+# 6. Install models (via Homebrew)
+echo "Installing models..."
+if not command -q models
+    if command -q brew
+        brew install arimxyer/tap/models
+    else
+        echo "⚠️  Homebrew is required to install 'models' but 'brew' command was not found."
+        echo "Please install Linuxbrew or install models manually."
+    end
+else
+    echo "models already installed."
 end
 
 # --------------------------------------------------------
