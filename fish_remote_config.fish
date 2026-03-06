@@ -91,13 +91,17 @@ if command -q apt-get
         echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
         sudo apt-get update; and sudo apt-get install -y glow
     end
+end
 
-    # 3. Eza (via official APT repo)
-    if not command -q eza
-        sudo mkdir -p /etc/apt/keyrings
-        curl -fsSL https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor --yes -o /etc/apt/keyrings/gierens.gpg
-        echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://apt.fury.io/eza/ /" | sudo tee /etc/apt/sources.list.d/gierens.list
-        sudo apt-get update; and sudo apt-get install -y eza
+# 3. Eza (Direct Binary Download)
+if not command -q eza
+    echo "Installing Eza directly..."
+    set -l EZA_URL (curl -s https://api.github.com/repos/eza-community/eza/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.gz" | head -n 1 | cut -d '"' -f 4)
+    if test -n "$EZA_URL"
+        curl -sL "$EZA_URL" -o /tmp/eza.tar.gz
+        tar -xzf /tmp/eza.tar.gz -C /tmp
+        mv /tmp/eza "$local_bin/"
+        rm /tmp/eza.tar.gz
     end
 end
 
@@ -146,4 +150,84 @@ end
 
 # Lazygit Config Symlink
 set -l lazygit_config_dir "$HOME/.config/lazygit"
-set -l lazygit_target
+set -l lazygit_target_file "$lazygit_config_dir/config.yml"
+set -l lazygit_source_file "lazygit_config.yml"
+mkdir -p "$lazygit_config_dir"
+if test -n "$DOTFILES_REPO_PATH"; and test -f "$DOTFILES_REPO_PATH/$lazygit_source_file"
+    ln -sf "$DOTFILES_REPO_PATH/$lazygit_source_file" "$lazygit_target_file"
+else
+    curl -sL -o "$lazygit_target_file" "https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/lazygit_config.yml"
+end
+
+# --------------------------------------------------------
+# 🛠️ Fish Aliases, Zoxide & Environment Setup (conf.d method)
+# --------------------------------------------------------
+echo "--- Setting up clean Aliases & Zoxide ---"
+mkdir -p "$HOME/.config/fish/conf.d"
+
+# 1. Zoxide Initialization (Prevents the Infinite Loop)
+echo "if command -v zoxide > /dev/null; zoxide init fish --cmd cd | source; end" > "$HOME/.config/fish/conf.d/zoxide_init.fish"
+
+# 2. Aliases and Welcome Message
+set -l user_env_file "$HOME/.config/fish/conf.d/user_env.fish"
+echo "alias gitcommands='git config --list --show-origin'" > "$user_env_file"
+echo "alias lg='lazygit'" >> "$user_env_file"
+echo "alias ls='eza'" >> "$user_env_file"
+echo "
+function fish_greeting
+    set_color cyan
+    echo '🚀 Welcome to your Workspace!'
+    set_color yellow
+    echo '🛠️  Available Tools: lazygit (lg), glow, llmfit, models, ranger, zoxide (cd), btop, chafa, csvlens, eza (ls)'
+    set_color normal
+end" >> "$user_env_file"
+
+# --------------------------------------------------------
+# 🔧 Git Configuration
+# --------------------------------------------------------
+git config --global core.editor 'code --wait'
+git config --global pull.rebase false 
+git config --global merge.conflictstyle diff3
+git config --global rebase.instructionFormat '"(%an <%ae>) %s"'
+git config --global credential.helper '/usr/bin/gp credential-helper'
+git config --global filter.lfs.clean 'git-lfs clean -- %f'
+git config --global filter.lfs.smudge 'git-lfs smudge -- %f'
+git config --global filter.lfs.process 'git-lfs filter-process'
+git config --global filter.lfs.required true
+git config --global push.default simple
+git config --global help.autocorrect 20
+
+# Git Aliases
+git config --global alias.fixup '!git add . && git commit --fixup=${1:-$(git rev-parse HEAD)} && GIT_EDITOR=true git rebase --interactive --autosquash ${1:-$(git rev-parse HEAD~2)}~1'
+git config --global alias.fileschanged 'diff HEAD^ HEAD --name-only'
+git config --global alias.fc 'diff --name-only HEAD~1 HEAD'
+git config --global alias.to 'commit -a --amend --no-edit'
+git config --global alias.tackon 'commit -a --amend --no-edit'
+git config --global alias.st 'status'
+git config --global alias.dt 'difftool HEAD^ HEAD --no-prompt'
+git config --global alias.temp 'checkout temp'
+git config --global alias.sd 'branch --delete'
+git config --global alias.safedelete 'branch --delete'
+git config --global alias.sami 'clean -dn'
+git config --global alias.druggedfox 'clean -df'
+git config --global alias.morning 'commit -a'
+git config --global alias.remessage 'commit --amend'
+git config --global alias.rip '!git reset HEAD~1 $1' 
+git config --global alias.ripout '!git reset HEAD~1 $1 && git checkout -- .'
+git config --global alias.ro 'reset HEAD~1'
+git config --global alias.nored 'checkout -- .'
+git config --global alias.nogreen 'reset HEAD .'
+git config --global alias.lg 'log --color --graph --pretty=format:%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset --abbrev-commit'
+git config --global alias.cane 'commit --amend --no-edit'
+git config --global alias.cod 'checkout `git branch --contains HEAD --no-merged | head -1`'
+git config --global alias.fcs 'diff --name-only'
+git config --global alias.us 'submodule update --recursive --remote'
+git config --global alias.updatesubmodules 'submodule update --recursive --remote'
+
+# --------------------------------------------------------
+# 🤖 Workspace Agents Configuration
+# --------------------------------------------------------
+echo "alias deploy_agents 'for workspace in beeline cetus coyote dsl falco falco-web-lite gemini lyra pdf-render-service platform; set target /home/coder/workspace/\$workspace/AGENTS.md; set vscode_dir /home/coder/workspace/\$workspace/.vscode; if test -d /home/coder/workspace/\$workspace; echo \"Setting up \$workspace...\"; curl -sL --fail -o \$target https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/agents/\$workspace.md 2>/dev/null; or curl -sL --fail -o \$target https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/agents/default.md 2>/dev/null; mkdir -p \$vscode_dir; curl -sL --fail -o \$vscode_dir/settings.json https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/vscode-settings-template.json 2>/dev/null; end; end; echo \"✅ Agent configs deployed to all workspaces\"'" >> "$user_env_file"
+
+echo ""
+echo "🎉 Setup run complete! Type 'exec fish' to apply all changes instantly."
