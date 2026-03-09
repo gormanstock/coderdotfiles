@@ -100,7 +100,7 @@ if not command -q zoxide
     curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
 end
 
-# 4. Eza (Direct Binary Download to bypass broken APT mirrors)
+# 4. Eza (Direct Binary Download)
 if not command -q eza
     echo "Installing Eza directly..."
     set -l EZA_URL (curl -s https://api.github.com/repos/eza-community/eza/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.gz" | head -n 1 | cut -d '"' -f 4)
@@ -112,9 +112,9 @@ if not command -q eza
     end
 end
 
-# 5. CSVLens (Pre-compiled Binary)
+# 5. CSVLens (Direct Binary Download)
 if not command -q csvlens
-    echo "Installing CSVLens..."
+    echo "Installing CSVLens directly..."
     set -l CSVLENS_URL (curl -s https://api.github.com/repos/YS-L/csvlens/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.xz" | head -n 1 | cut -d '"' -f 4)
     if test -n "$CSVLENS_URL"
         curl -sL "$CSVLENS_URL" -o /tmp/csvlens.tar.xz
@@ -124,26 +124,27 @@ if not command -q csvlens
     end
 end
 
-# 6. llmfit (Custom Script)
+# 6. llmfit (Direct Binary Download)
 if not command -q llmfit
-    echo "Installing llmfit..."
-    curl -fsSL https://llmfit.axjns.dev/install.sh | sh
+    echo "Installing llmfit directly..."
+    set -l LLMFIT_URL (curl -s https://api.github.com/repos/AlexsJones/llmfit/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-musl.tar.gz" | head -n 1 | cut -d '"' -f 4)
+    if test -n "$LLMFIT_URL"
+        curl -sL "$LLMFIT_URL" -o /tmp/llmfit.tar.gz
+        tar -xzf /tmp/llmfit.tar.gz -C /tmp
+        find /tmp -name "llmfit" -type f -executable -exec mv {} "$local_bin/" \;
+        rm -rf /tmp/llmfit*
+    end
 end
 
-# 7. models (via Cargo Build from Source)
+# 7. models (Direct Binary Download)
 if not command -q models
-    if command -q cargo
-        echo "Installing models via Cargo from source..."
-        set -l tmp_models_dir (mktemp -d)
-        git clone --quiet https://github.com/arimxyer/models $tmp_models_dir
-        cd $tmp_models_dir
-        cargo build --release
-        install target/release/models "$local_bin/"
-        cd -
-        rm -rf $tmp_models_dir
-        echo "✅ 'models' installed."
-    else
-        echo "⚠️ 'cargo' not found. Skipping 'models'."
+    echo "Installing models directly..."
+    set -l MODELS_URL (curl -s https://api.github.com/repos/arimxyer/models/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.gz" | head -n 1 | cut -d '"' -f 4)
+    if test -n "$MODELS_URL"
+        curl -sL "$MODELS_URL" -o /tmp/models.tar.gz
+        tar -xzf /tmp/models.tar.gz -C /tmp
+        find /tmp -name "models" -type f -executable -exec mv {} "$local_bin/" \;
+        rm -rf /tmp/models*
     end
 end
 
