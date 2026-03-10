@@ -82,7 +82,12 @@ echo "--- Installing Additional Packages ---"
 if command -q apt-get
     sudo apt-get update
     # 1. Standard APT packages (Zoxide removed to avoid buggy v0.4.3)
-    sudo apt-get install -y ranger btop chafa
+    sudo apt-get install -y ranger btop chafa fzf bat
+
+    # Debian/Ubuntu installs bat as 'batcat'. Link it to 'bat' in our local bin.
+    if command -v batcat > /dev/null; and not command -v bat > /dev/null
+        ln -s (which batcat) "$local_bin/bat"
+    end
 
     # 2. Glow (via Charmbracelet APT repo)
     if not command -q glow
@@ -188,12 +193,13 @@ set -l user_env_file "$HOME/.config/fish/conf.d/user_env.fish"
 echo "alias gitcommands='git config --list --show-origin'" > "$user_env_file"
 echo "alias lg='lazygit'" >> "$user_env_file"
 echo "alias ls='eza'" >> "$user_env_file"
+echo "alias cat='bat'" >> "$user_env_file"
 echo "
 function fish_greeting
     set_color cyan
     echo '🚀 Welcome to your Workspace!'
     set_color yellow
-    echo '🛠️  Available Tools: lazygit (lg), glow, llmfit, models, ranger, zoxide (cd), btop, chafa, csvlens, eza (ls)'
+    echo '🛠️  Available Tools: lazygit (lg), glow, llmfit, models, ranger, zoxide (cd), btop, chafa, csvlens, eza (ls), bat (cat), fzf'
     set_color normal
 end" >> "$user_env_file"
 
