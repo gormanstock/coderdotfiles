@@ -1,7 +1,7 @@
 # This script is designed for single-run execution via:
 # curl -sS -o /tmp/remote_config.fish YOUR_RAW_FISH_CONFIG_URL
 # source /tmp/remote_config.fish
-# Capture the argument passed from install.sh (the repo path)
+
 set -l DOTFILES_REPO_PATH $argv[1]
 
 echo "--- Starting Remote Fish Configuration Setup ---"
@@ -14,10 +14,8 @@ set -l local_bin "$HOME/.local/bin"
 if not test -d "$local_bin"
     mkdir -p "$local_bin"
 end
-# Instantly add local bin to PATH for this session and future ones
 fish_add_path "$local_bin"
 
-# If Homebrew is installed but not in PATH, add it cleanly (Fish syntax)
 if test -f /home/linuxbrew/.linuxbrew/bin/brew
     eval (/home/linuxbrew/.linuxbrew/bin/brew shellenv)
 end
@@ -31,7 +29,7 @@ set -l config_file "$HOME/.config/fish/config.fish"
 set -l omf_init_path "$OMF_DATA_DIR/init.fish"
 
 if not test -d "$OMF_DATA_DIR"
-    echo "Oh My Fish not found. Bootstrapping via direct clone..."
+    echo "Oh My Fish not found. Bootstrapping..."
     if not command -q git; echo "Error: 'git' command not found."; exit 1; end
 
     mkdir -p "$OMF_CONFIG_DIR"
@@ -81,15 +79,12 @@ echo "--- Installing Additional Packages ---"
 
 if command -q apt-get
     sudo apt-get update
-    # 1. Standard APT packages (Zoxide removed to avoid buggy v0.4.3)
     sudo apt-get install -y ranger btop chafa fzf bat
 
-    # Debian/Ubuntu installs bat as 'batcat'. Link it to 'bat' in our local bin.
     if command -v batcat > /dev/null; and not command -v bat > /dev/null
         ln -s (which batcat) "$local_bin/bat"
     end
 
-    # 2. Glow (via Charmbracelet APT repo)
     if not command -q glow
         echo "Installing Glow..."
         sudo mkdir -p /etc/apt/keyrings
@@ -99,15 +94,15 @@ if command -q apt-get
     end
 end
 
-# 3. Zoxide (Latest version via official script to prevent _z_cd loop)
+# Zoxide
 if not command -q zoxide
     echo "Installing latest Zoxide..."
     curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
 end
 
-# 4. Eza (Direct Binary Download)
+# Eza
 if not command -q eza
-    echo "Installing Eza directly..."
+    echo "Installing Eza..."
     set -l EZA_URL (curl -s https://api.github.com/repos/eza-community/eza/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.gz" | head -n 1 | cut -d '"' -f 4)
     if test -n "$EZA_URL"
         curl -sL "$EZA_URL" -o /tmp/eza.tar.gz
@@ -117,9 +112,9 @@ if not command -q eza
     end
 end
 
-# 5. CSVLens (Direct Binary Download)
+# CSVLens
 if not command -q csvlens
-    echo "Installing CSVLens directly..."
+    echo "Installing CSVLens..."
     set -l CSVLENS_URL (curl -s https://api.github.com/repos/YS-L/csvlens/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.xz" | head -n 1 | cut -d '"' -f 4)
     if test -n "$CSVLENS_URL"
         curl -sL "$CSVLENS_URL" -o /tmp/csvlens.tar.xz
@@ -129,9 +124,9 @@ if not command -q csvlens
     end
 end
 
-# 6. llmfit (Direct Binary Download)
+# llmfit
 if not command -q llmfit
-    echo "Installing llmfit directly..."
+    echo "Installing llmfit..."
     set -l LLMFIT_URL (curl -s https://api.github.com/repos/AlexsJones/llmfit/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-musl.tar.gz" | head -n 1 | cut -d '"' -f 4)
     if test -n "$LLMFIT_URL"
         curl -sL "$LLMFIT_URL" -o /tmp/llmfit.tar.gz
@@ -141,9 +136,9 @@ if not command -q llmfit
     end
 end
 
-# 7. models (Direct Binary Download)
+# models
 if not command -q models
-    echo "Installing models directly..."
+    echo "Installing models..."
     set -l MODELS_URL (curl -s https://api.github.com/repos/arimxyer/models/releases/latest | grep "browser_download_url.*x86_64-unknown-linux-gnu.tar.gz" | head -n 1 | cut -d '"' -f 4)
     if test -n "$MODELS_URL"
         curl -sL "$MODELS_URL" -o /tmp/models.tar.gz
@@ -154,57 +149,74 @@ if not command -q models
 end
 
 # --------------------------------------------------------
+# 🤖 RTK & Caveman Setup
+# --------------------------------------------------------
+
+# RTK (Rust Token Killer)
+if not command -q rtk
+    echo "Installing RTK..."
+    curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh
+    # Initialize global hooks for Gemini/Claude
+    rtk init -g --gemini --auto-patch > /dev/null 2>&1
+end
+
+# Caveman
+if not command -q caveman
+    echo "Installing Caveman..."
+    set -l CAVEMAN_URL (curl -s https://api.github.com/repos/stcref/caveman/releases/latest | grep "browser_download_url.*linux_amd64.tar.gz" | head -n 1 | cut -d '"' -f 4)
+    if test -n "$CAVEMAN_URL"
+        curl -sL "$CAVEMAN_URL" -o /tmp/caveman.tar.gz
+        tar -xzf /tmp/caveman.tar.gz -C /tmp
+        find /tmp -name "caveman" -type f -executable -exec mv {} "$local_bin/" \;
+        rm -rf /tmp/caveman*
+    end
+end
+
+# --------------------------------------------------------
 # 💻 Lazygit Setup
 # --------------------------------------------------------
-echo "--- Lazygit Setup ---"
 if not command -q lazygit
+    echo "Installing Lazygit..."
     set -l LAZYGIT_VERSION (curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | \grep -oP '"tag_name": "v\K[^"]*')
     if test -n "$LAZYGIT_VERSION"
-        set -l LAZYGIT_DOWNLOAD_URL "https://github.com/jesseduffield/lazygit/releases/download/v$LAZYGIT_VERSION/lazygit_"$LAZYGIT_VERSION"_Linux_x86_64.tar.gz"
-        curl -Lo /tmp/lazygit.tar.gz "$LAZYGIT_DOWNLOAD_URL"
+        curl -Lo /tmp/lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/download/v$LAZYGIT_VERSION/lazygit_"$LAZYGIT_VERSION"_Linux_x86_64.tar.gz"
         tar -xzf /tmp/lazygit.tar.gz -C /tmp
         install /tmp/lazygit "$local_bin"
         rm /tmp/lazygit.tar.gz /tmp/lazygit 2>/dev/null
     end
 end
 
-# Lazygit Config Symlink
 set -l lazygit_config_dir "$HOME/.config/lazygit"
-set -l lazygit_target_file "$lazygit_config_dir/config.yml"
-set -l lazygit_source_file "lazygit_config.yml"
 mkdir -p "$lazygit_config_dir"
-if test -n "$DOTFILES_REPO_PATH"; and test -f "$DOTFILES_REPO_PATH/$lazygit_source_file"
-    ln -sf "$DOTFILES_REPO_PATH/$lazygit_source_file" "$lazygit_target_file"
+if test -n "$DOTFILES_REPO_PATH"; and test -f "$DOTFILES_REPO_PATH/lazygit_config.yml"
+    ln -sf "$DOTFILES_REPO_PATH/lazygit_config.yml" "$lazygit_config_dir/config.yml"
 else
-    curl -sL -o "$lazygit_target_file" "https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/lazygit_config.yml"
+    curl -sL -o "$lazygit_config_dir/config.yml" "https://raw.githubusercontent.com/gormanstock/coderdotfiles/main/lazygit_config.yml"
 end
 
 # --------------------------------------------------------
-# 🛠️ Fish Aliases, Zoxide & Environment Setup (conf.d method)
+# 🛠️ Fish Aliases & Env Setup
 # --------------------------------------------------------
-echo "--- Setting up clean Aliases & Zoxide ---"
 mkdir -p "$HOME/.config/fish/conf.d"
-
-# 1. Zoxide Initialization (Ensures it loads exactly once)
 echo "if command -v zoxide > /dev/null; zoxide init fish --cmd cd | source; end" > "$HOME/.config/fish/conf.d/zoxide_init.fish"
 
-# 2. Aliases and Welcome Message
 set -l user_env_file "$HOME/.config/fish/conf.d/user_env.fish"
 echo "alias gitcommands='git config --list --show-origin'" > "$user_env_file"
 echo "alias lg='lazygit'" >> "$user_env_file"
 echo "alias ls='eza'" >> "$user_env_file"
 echo "alias cat='bat'" >> "$user_env_file"
+echo "alias rtk-gain='rtk gain'" >> "$user_env_file"
 echo "
 function fish_greeting
     set_color cyan
     echo '🚀 Welcome to your Workspace!'
     set_color yellow
-    echo '🛠️  Available Tools: lazygit (lg), glow, llmfit, models, ranger, zoxide (cd), btop, chafa, csvlens, eza (ls), bat (cat), fzf'
+    echo '🛠️  Available Tools: rtk, caveman, lazygit (lg), glow, llmfit, models, ranger, zoxide (cd), btop, chafa, csvlens, eza (ls), bat (cat), fzf'
     set_color normal
 end" >> "$user_env_file"
 
 # --------------------------------------------------------
-# 🔧 Git Configuration
+# 🔧 Git Configuration & Aliases
 # --------------------------------------------------------
 git config --global core.editor 'code --wait'
 git config --global pull.rebase false 
@@ -218,7 +230,7 @@ git config --global filter.lfs.required true
 git config --global push.default simple
 git config --global help.autocorrect 20
 
-# Git Aliases
+# All original aliases preserved
 git config --global alias.fixup '!git add . && git commit --fixup=${1:-$(git rev-parse HEAD)} && GIT_EDITOR=true git rebase --interactive --autosquash ${1:-$(git rev-parse HEAD~2)}~1'
 git config --global alias.fileschanged 'diff HEAD^ HEAD --name-only'
 git config --global alias.fc 'diff --name-only HEAD~1 HEAD'
