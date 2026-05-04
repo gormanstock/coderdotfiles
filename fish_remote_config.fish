@@ -156,8 +156,12 @@ end
 if not command -q rtk
     echo "Installing RTK..."
     curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh
-    # Initialize global hooks for Gemini/Claude
-    rtk init -g --gemini --auto-patch > /dev/null 2>&1
+    # Initialize global hooks for Gemini/Claude (runs once, writes to ~/.config/rtk/)
+    if command -q rtk
+        rtk init -g --auto-patch > /dev/null 2>&1
+    else if test -f "$local_bin/rtk"
+        "$local_bin/rtk" init -g --gemini --auto-patch > /dev/null 2>&1
+    end
 end
 
 # Caveman
